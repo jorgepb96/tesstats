@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://drakonis96.github.io/tesstats/sitemap.xml

@@ -1,0 +1,64 @@
+## macOS
+.DS_Store
+*.swp
+
+## Local editor metadata
+.freebuff/
+
+## Xcode build output & indexes
+build/
+build-mac/
+build-ipa/
+build-ios-device/
+.build/
+DerivedData/
+*.xcarchive/
+*.xcresult/
+*.dSYM/
+*.dSYM.zip
+*.app/
+*.xcuserstate
+*.xccheckout
+*.xcscmblueprint
+*.moved-aside
+**/xcuserdata/
+
+## Generated Xcode project — regenerate from project.yml with `xcodegen generate`
+*.xcodeproj/
+
+## Release artifacts (attached to GitHub Releases, not committed)
+*.ipa
+*.dmg
+Payload/
+export/
+
+## Dev screenshots may contain real data — only the curated demo set in docs/ is committed
+.screenshots/
+/screenshots/
+
+## App Store product-page assets are local drafts; TestFlight does not use them
+/docs/appstore/
+
+## Push microservice (Node)
+server/node_modules/
+server/.env
+server/tokens.json
+server/live-activity-tokens.json
+server/device-preferences.json
+server/charge-reminders.json
+server/*.p8
+
+## Signing material / secrets
+*.p8
+*.pem
+*.p12
+*.mobileprovision
+*.provisionprofile
+*.cer
+AppStoreConnectAPIKey*.json
+AuthKey_*.json
+
+## Local environment files
+.env
+.env.*
+!.env.example

@@ -1,0 +1,4 @@
+"NSLocalNetworkUsageDescription" = "Tesstats connects to your self-hosted TeslaMate server on your local network.";
+"NSLocationWhenInUseUsageDescription" = "Driver Display uses your iPhone location to improve live speed, trip distance and map accuracy while it is open.";
+"NSMotionUsageDescription" = "Driver Display uses iPhone motion sensors to improve acceleration and braking estimates while it is open.";
+"NSBluetoothAlwaysUsageDescription" = "Driver Copilot optionally connects directly to your selected Tesla to read live driving data with a vehicle-approved read-only key.";

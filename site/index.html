@@ -1,0 +1,371 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#070709">
+  <meta name="description" content="Tesstats turns your own TeslaMate data into a beautiful read only dashboard for iPhone, iPad, Mac, Apple Watch, widgets, and Driver Display.">
+  <meta property="og:title" content="Tesstats | Your drive, beautifully understood">
+  <meta property="og:description" content="A private, read only TeslaMate companion with live status, trips, charging, battery health, analytics, and an immersive Driver Display.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://drakonis96.github.io/tesstats/">
+  <meta property="og:image" content="https://drakonis96.github.io/tesstats/assets/brand/app-icon.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <title>Tesstats | Your drive, beautifully understood</title>
+  <link rel="icon" href="assets/brand/app-icon.png">
+  <link rel="apple-touch-icon" href="assets/brand/app-icon.png">
+  <link rel="manifest" href="site.webmanifest">
+  <link rel="stylesheet" href="assets/css/styles.css?v=5">
+  <script src="assets/js/main.js?v=3" defer></script>
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+  <div class="ambient" aria-hidden="true">
+    <span class="ambient-orb orb-one"></span>
+    <span class="ambient-orb orb-two"></span>
+    <span class="ambient-grid"></span>
+  </div>
+
+  <header class="site-header" data-header>
+    <a class="brand" href="#top" aria-label="Tesstats home">
+      <img src="assets/brand/logo.svg" alt="" width="112" height="34">
+      <span>Tesstats</span>
+    </a>
+    <nav class="nav-links" aria-label="Main navigation">
+      <a href="#features">Features</a>
+      <a href="#driver-display">Driver Display</a>
+      <a href="#privacy">Privacy</a>
+      <a href="#download">Download</a>
+    </nav>
+    <a class="gh-badge" href="https://github.com/jorgepb96/tesstats" target="_blank" rel="noopener" title="Star Tesstats on GitHub" data-gh-badge><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82a7.42 7.42 0 0 1 2-.27c.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8Z"/></svg><span class="lbl">Star</span><span class="stars"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 .25a.75.75 0 0 1 .67.42l1.88 3.8 4.2.62c.61.09.86.84.41 1.28l-3.04 2.96.72 4.18a.75.75 0 0 1-1.09.79L8 12.35l-3.76 1.97a.75.75 0 0 1-1.08-.79l.72-4.18L.83 6.37a.75.75 0 0 1 .41-1.28l4.2-.61L7.32.67A.75.75 0 0 1 8 .25Z"/></svg><span data-star-count aria-label="Stars on GitHub">·</span></span></a>
+    <a class="header-cta" href="https://testflight.apple.com/join/pc7ywfgu">Join the public beta</a>
+    <button class="menu-button" type="button" aria-label="Open menu" aria-expanded="false" data-menu-button>
+      <span></span><span></span>
+    </button>
+  </header>
+
+  <main id="main">
+    <section class="hero" id="top">
+      <div class="hero-copy reveal">
+        <p class="eyebrow"><span class="pulse-dot"></span> Your car. Your data. Your screen.</p>
+        <h1>Your drive,<br><span>beautifully understood.</span></h1>
+        <p class="hero-lede">Tesstats transforms the data from your own TeslaMate server into a live, private, and deeply useful driving companion.</p>
+        <div class="hero-actions">
+          <a class="button button-primary" href="#driver-display">Meet Driver Display <span aria-hidden="true">↘</span></a>
+          <a class="button button-ghost" href="https://github.com/jorgepb96/tesstats/issues">Support <span aria-hidden="true">↗</span></a>
+        </div>
+        <div class="hero-proof" aria-label="Tesstats core values">
+          <span>Read only</span>
+          <span>Your server</span>
+          <span>No trackers</span>
+          <span>Built for Apple</span>
+        </div>
+        <p class="unofficial-note"><strong>Unofficial app.</strong> This project is an unofficial community tool and is not affiliated with, endorsed by, or supported by the official TeslaMate project. Tesstats is not related in any way to TeslaMate or Tesla, Inc. <a href="disclaimer.html">Read the disclaimer</a></p>
+      </div>
+
+      <div class="hero-visual reveal" data-delay="120">
+        <div class="hero-halo" aria-hidden="true"></div>
+        <div class="phone phone-hero">
+          <div class="phone-island" aria-hidden="true"></div>
+          <img src="assets/screens/home-en.png" alt="Real Tesstats summary screen with vehicle status and energy insights" width="1206" height="2622">
+        </div>
+      </div>
+
+      <a class="scroll-cue" href="#intro" aria-label="Scroll to discover Tesstats">
+        <span>Scroll to discover</span><i></i>
+      </a>
+    </section>
+
+    <section class="statement section-shell" id="intro">
+      <p class="section-kicker reveal">One clear view</p>
+      <h2 class="statement-title reveal">Less hunting through charts.<br><span>More knowing what matters.</span></h2>
+      <p class="statement-copy reveal">From a two second glance to a deep look at years of driving, Tesstats makes your own data feel immediate and human.</p>
+      <div class="signal-strip reveal" aria-label="Product highlights">
+        <div><strong>Live</strong><span>MQTT status</span></div>
+        <div><strong>Rich</strong><span>Trip history</span></div>
+        <div><strong>Smart</strong><span>Energy insights</span></div>
+        <div><strong>Private</strong><span>Self hosted data</span></div>
+      </div>
+    </section>
+
+    <section class="feature-stage" id="features">
+      <div class="section-shell">
+        <div class="section-heading reveal">
+          <div>
+            <p class="section-kicker">The whole car at a glance</p>
+            <h2>Every useful signal.<br>None of the noise.</h2>
+          </div>
+          <p>See what is happening now, understand what happened before, and spot the patterns that help you drive and charge better.</p>
+        </div>
+
+        <div class="bento-grid">
+          <article class="bento-card bento-live reveal">
+            <div class="card-copy">
+              <span class="card-index">01</span>
+              <p class="card-label">Live status</p>
+              <h3>Know your car before you reach it.</h3>
+              <p>Battery, range, charging power, climate, locks, Sentry, tire pressure, location, and route status stay together in one calm view.</p>
+            </div>
+            <div class="phone phone-card phone-dashboard">
+              <div class="phone-island" aria-hidden="true"></div>
+              <img src="assets/screens/home-en.png" loading="lazy" alt="Real Tesstats live dashboard" width="1206" height="2622">
+            </div>
+          </article>
+
+          <article class="bento-card bento-battery reveal" data-delay="80">
+            <div class="card-copy">
+              <span class="card-index">02</span>
+              <p class="card-label">Battery health</p>
+              <h3>See the long story behind every percent.</h3>
+              <p>Follow estimated capacity, full range, degradation, recent levels, and charging history over time.</p>
+            </div>
+            <div class="battery-art" aria-hidden="true">
+              <div class="battery-ring"><span>91<small>%</small></span></div>
+              <svg viewBox="0 0 440 150" role="presentation">
+                <defs><linearGradient id="chartFill" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#d50046" stop-opacity=".35"/><stop offset="1" stop-color="#d50046" stop-opacity="0"/></linearGradient></defs>
+                <path class="area" d="M0 118 C45 105 62 119 102 86 S165 93 196 66 S253 83 292 45 S354 64 440 18 L440 150 L0 150 Z"/>
+                <path class="line" d="M0 118 C45 105 62 119 102 86 S165 93 196 66 S253 83 292 45 S354 64 440 18"/>
+              </svg>
+            </div>
+          </article>
+
+          <article class="bento-card bento-trips reveal">
+            <div class="card-copy">
+              <span class="card-index">03</span>
+              <p class="card-label">Trips</p>
+              <h3>Every drive has a shape.</h3>
+              <p>Open any trip for distance, time, consumption, route, and elevation. Tag it as work or personal, then filter and export it.</p>
+            </div>
+            <div class="trip-route" aria-hidden="true">
+              <svg viewBox="0 0 600 260">
+                <path class="route-shadow" d="M30 222 C82 142 106 193 162 122 S255 196 315 105 S427 155 478 66 S544 78 575 25"/>
+                <path class="route-line" d="M30 222 C82 142 106 193 162 122 S255 196 315 105 S427 155 478 66 S544 78 575 25"/>
+                <circle cx="30" cy="222" r="8"/><circle cx="575" cy="25" r="8"/>
+              </svg>
+              <div class="route-stat route-stat-one"><strong>48.2 km</strong><span>Distance</span></div>
+              <div class="route-stat route-stat-two"><strong>147 Wh/km</strong><span>Efficiency</span></div>
+            </div>
+          </article>
+
+          <article class="bento-card bento-charge reveal" data-delay="80">
+            <div class="card-copy">
+              <span class="card-index">04</span>
+              <p class="card-label">Charging</p>
+              <h3>Put a real number on every charge.</h3>
+              <p>Track energy, cost, AC or DC sessions, location, and real charge curves. Add flat, location, or time based tariffs.</p>
+            </div>
+            <div class="charge-total"><small>Estimated saving</small><strong>€209.09</strong><span>this month</span></div>
+          </article>
+
+          <article class="bento-card bento-insights reveal">
+            <div class="card-copy">
+              <span class="card-index">05</span>
+              <p class="card-label">Deep insights</p>
+              <h3>Your habits become useful answers.</h3>
+              <p>Compare months and years, find records, explore cost per 100 km, inspect phantom drain, and see how temperature changes consumption.</p>
+            </div>
+            <div class="insight-bars" aria-hidden="true">
+              <span style="--h:36%"></span><span style="--h:52%"></span><span style="--h:44%"></span><span style="--h:74%"></span><span style="--h:64%"></span><span style="--h:89%"></span><span style="--h:78%"></span><span style="--h:100%"></span>
+            </div>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="driver-section" id="driver-display">
+      <div class="driver-glow" aria-hidden="true"></div>
+      <div class="section-shell">
+        <div class="driver-intro reveal">
+          <p class="section-kicker">Driver Display</p>
+          <h2>Turn a mounted screen into your perfect driving companion.</h2>
+          <p>A focused full screen view that puts speed, battery, range, route context, gear, power, and the alerts that matter where your eyes can find them fast.</p>
+        </div>
+
+        <div class="driver-frame reveal">
+          <div class="driver-camera" aria-hidden="true"></div>
+          <img src="assets/screens/driver-landscape-en.png" loading="lazy" alt="Real Tesstats Driver Display in landscape mode" width="2622" height="1206">
+          <div class="driver-reflection" aria-hidden="true"></div>
+        </div>
+
+        <div class="driver-points">
+          <article class="reveal">
+            <span>01</span>
+            <h3>Built for a glance</h3>
+            <p>Large speed, clear gear, simple alerts, and a map that stays readable in portrait or landscape.</p>
+          </article>
+          <article class="reveal" data-delay="70">
+            <span>02</span>
+            <h3>Make it yours</h3>
+            <p>Choose a preset, change the theme and speed size, then reorder or hide each module before the drive.</p>
+          </article>
+          <article class="reveal" data-delay="140">
+            <span>03</span>
+            <h3>Fresh data when available</h3>
+            <p>Optional read only Bluetooth telemetry can improve speed, gear, power, and mileage. The app can fall back to iPhone GPS and TeslaMate automatically.</p>
+          </article>
+          <article class="reveal" data-delay="210">
+            <span>04</span>
+            <h3>Safe by design</h3>
+            <p>It is a supplemental display. It sends no vehicle controls and never invents navigation steps or driver assistance status.</p>
+          </article>
+        </div>
+        <p class="safety-note reveal">Set up Driver Display before moving. Always use the vehicle controls and road signs as the primary source while driving.</p>
+      </div>
+    </section>
+
+    <section class="screens-section">
+      <div class="section-shell">
+        <div class="section-heading reveal">
+          <div>
+            <p class="section-kicker">Designed to feel at home</p>
+            <h2>Dense with detail.<br>Effortless to read.</h2>
+          </div>
+          <p>Every screen uses the same clear visual language, from a live summary to a deep charging session.</p>
+        </div>
+        <div class="screen-gallery-controls reveal">
+          <p>Drag to explore every screen</p>
+          <div class="screen-gallery-buttons">
+            <button class="screen-arrow" type="button" data-screen-prev aria-label="Show previous app screens">←</button>
+            <button class="screen-arrow" type="button" data-screen-next aria-label="Show next app screens">→</button>
+          </div>
+        </div>
+      </div>
+      <div class="screen-rail" data-screen-rail tabindex="0" aria-label="Real Tesstats app screens">
+        <figure class="screen-shot reveal"><div class="phone"><div class="phone-island"></div><img src="assets/screens/trips.png" loading="lazy" alt="Real trips screen" width="1206" height="2622"></div><figcaption>Trips</figcaption></figure>
+        <figure class="screen-shot screen-shot-raised reveal"><div class="phone"><div class="phone-island"></div><img src="assets/screens/charging.png" loading="lazy" alt="Real charging history screen" width="1206" height="2622"></div><figcaption>Charging</figcaption></figure>
+        <figure class="screen-shot reveal"><div class="phone"><div class="phone-island"></div><img src="assets/screens/battery.png" loading="lazy" alt="Real battery health screen" width="1206" height="2622"></div><figcaption>Battery</figcaption></figure>
+        <figure class="screen-shot screen-shot-raised reveal"><div class="phone"><div class="phone-island"></div><img src="assets/screens/driver-portrait-en.png" loading="lazy" alt="Real Driver Display in English" width="1206" height="2622"></div><figcaption>Driver view</figcaption></figure>
+        <figure class="screen-shot reveal"><div class="phone"><div class="phone-island"></div><img src="assets/screens/more-en.png" loading="lazy" alt="Real Tesstats tools and insights screen in English" width="1206" height="2622"></div><figcaption>More insights</figcaption></figure>
+      </div>
+      <p class="screen-note">Real product captures with sample vehicle data.</p>
+    </section>
+
+    <section class="ecosystem-section">
+      <div class="section-shell">
+        <div class="section-heading reveal">
+          <div>
+            <p class="section-kicker">More than an iPhone app</p>
+            <h2>Your car fits into your Apple life.</h2>
+          </div>
+          <p>Useful details reach the screen that makes sense now, without turning into clutter.</p>
+        </div>
+        <div class="ecosystem-grid">
+          <article class="ecosystem-card eco-wide reveal">
+            <div><p class="card-label">Live Activity</p><h3>Follow a charge from the Lock Screen.</h3><p>See progress, power, and time remaining with support for Dynamic Island.</p></div>
+            <div class="live-activity" aria-hidden="true"><span>↯</span><div><small>Tesstats</small><strong>Charging to 80%</strong><i><b></b></i></div><em>1h 27m</em></div>
+          </article>
+          <article class="ecosystem-card reveal" data-delay="80"><div class="eco-symbol">⌚</div><p class="card-label">Apple Watch</p><h3>Battery and range on your wrist.</h3><p>The companion app keeps the essentials close across your Apple devices.</p></article>
+          <article class="ecosystem-card reveal" data-delay="160"><div class="eco-symbol">▦</div><p class="card-label">Widgets</p><h3>A useful glance without opening the app.</h3><p>Home Screen and Lock Screen widgets bring live status forward.</p></article>
+          <article class="ecosystem-card reveal"><div class="eco-symbol">⌘</div><p class="card-label">Mac</p><h3>Quietly present in your menu bar.</h3><p>Keep battery and range visible while background notifications stay ready.</p></article>
+          <article class="ecosystem-card reveal" data-delay="80"><div class="eco-symbol">✦</div><p class="card-label">Siri and Shortcuts</p><h3>Ask for the number you need.</h3><p>Use actions like checking your battery without searching through screens.</p></article>
+          <article class="ecosystem-card reveal" data-delay="160"><div class="eco-symbol">⇩</div><p class="card-label">Export</p><h3>Your history stays portable.</h3><p>Export CSV, JSON, or GPX. Move settings with an encrypted backup.</p></article>
+        </div>
+      </div>
+    </section>
+
+    <section class="privacy-section" id="privacy">
+      <div class="privacy-word" aria-hidden="true">YOURS</div>
+      <div class="section-shell privacy-layout">
+        <div class="privacy-copy reveal">
+          <p class="section-kicker">Private by architecture</p>
+          <h2>Your driving history is personal. It should stay that way.</h2>
+          <p>Tesstats connects directly to the server you choose. The project does not run an analytics cloud, an advertising system, or a vehicle data service.</p>
+          <a class="text-link" href="privacy.html">Read the privacy policy <span>↗</span></a>
+        </div>
+        <div class="privacy-stack">
+          <article class="privacy-card reveal"><span class="privacy-number">01</span><div><h3>No Tesstats account</h3><p>There is no separate sign in and no developer hosted profile for your vehicle.</p></div></article>
+          <article class="privacy-card reveal" data-delay="70"><span class="privacy-number">02</span><div><h3>Read only vehicle data</h3><p>Tesstats reads status and history. It does not unlock, start, move, or charge your car.</p></div></article>
+          <article class="privacy-card reveal" data-delay="140"><span class="privacy-number">03</span><div><h3>Secrets in Keychain</h3><p>Server credentials stay in the Apple Keychain. Optional backups use password based AES 256 encryption.</p></div></article>
+          <article class="privacy-card reveal" data-delay="210"><span class="privacy-number">04</span><div><h3>Secure by default</h3><p>Encrypted MQTT and HTTPS are the standard. Plain local HTTP needs a clear choice from you.</p></div></article>
+        </div>
+      </div>
+    </section>
+
+    <section class="flow-section">
+      <div class="section-shell">
+        <div class="flow-heading reveal">
+          <p class="section-kicker">Simple architecture</p>
+          <h2>Your stack. Your connection. Your view.</h2>
+        </div>
+        <div class="data-flow reveal" aria-label="How data reaches Tesstats">
+          <div class="flow-node"><span class="node-mark">T</span><small>Source</small><strong>Your Tesla</strong></div>
+          <div class="flow-path"><i></i><span>Vehicle data</span></div>
+          <div class="flow-node"><span class="node-mark node-mate">TM</span><small>Your server</small><strong>TeslaMate</strong></div>
+          <div class="flow-path"><i></i><span>MQTT and API</span></div>
+          <div class="flow-node flow-node-active"><img src="assets/brand/app-icon.png" alt="" width="72" height="72"><small>Your devices</small><strong>Tesstats</strong></div>
+        </div>
+        <p class="flow-note reveal">Tesstats is an unofficial, independent client. It is not affiliated with, endorsed by, or related in any way to Tesla, Inc. or the TeslaMate project, and it contains no TeslaMate code.</p>
+      </div>
+    </section>
+
+    <section class="start-section" id="start">
+      <div class="section-shell">
+        <div class="start-heading reveal">
+          <p class="section-kicker">Start your own dashboard</p>
+          <h2>Three steps from raw data to a better daily drive.</h2>
+        </div>
+        <div class="steps-grid">
+          <article class="step-card reveal"><span>01</span><h3>Run TeslaMate</h3><p>Set up TeslaMate on a computer, NAS, Raspberry Pi, or cloud server that you control.</p><a href="https://docs.teslamate.org/docs/installation/docker">TeslaMate setup <b>↗</b></a></article>
+          <article class="step-card reveal" data-delay="80"><span>02</span><h3>Connect securely</h3><p>Give Tesstats encrypted access to MQTT for live data and TeslaMateApi for history.</p><a href="support.html#connect">Connection checklist <b>↗</b></a></article>
+          <article class="step-card reveal" data-delay="160"><span>03</span><h3>Make it yours</h3><p>Choose your vehicle, units, tariffs, dashboard layout, alerts, and Driver Display modules.</p><a href="https://testflight.apple.com/join/pc7ywfgu">Join on TestFlight <b>↗</b></a></article>
+        </div>
+        <div class="demo-banner reveal">
+          <div><span class="demo-dot"></span><p class="card-label">No server yet</p><h3>Try every screen with realistic sample data.</h3><p>Demo mode makes no network connection. It is ready from the welcome screen.</p></div>
+          <a class="button button-light" href="support.html">Learn more <span>↗</span></a>
+        </div>
+      </div>
+    </section>
+
+    <section class="faq-section">
+      <div class="section-shell faq-layout">
+        <div class="faq-heading reveal"><p class="section-kicker">Good to know</p><h2>Clear answers before you connect.</h2></div>
+        <div class="faq-list">
+          <details class="reveal"><summary>Can Tesstats control my car?<span>+</span></summary><p>No. Tesstats is read only. It does not include actions to unlock, start, move, charge, or change your vehicle.</p></details>
+          <details class="reveal"><summary>Is Tesstats an official TeslaMate app?<span>+</span></summary><p>No. Tesstats is an unofficial, independent app. It is not made, endorsed, or supported by the TeslaMate project or by Tesla, Inc., and it is not related to them in any way. It only reads the data that your own TeslaMate server already publishes. Please report Tesstats problems in the <a href="https://github.com/jorgepb96/tesstats/issues">Tesstats issue tracker</a>, never to the TeslaMate team.</p></details>
+          <details class="reveal"><summary>Is Tesstats open source?<span>+</span></summary><p>Yes. The full source code is on <a href="https://github.com/jorgepb96/tesstats">GitHub</a> under the GNU Affero General Public License v3.0 (AGPL-3.0).</p></details>
+          <details class="reveal"><summary>Do I need TeslaMate?<span>+</span></summary><p>Yes for your own live data. TeslaMate provides MQTT values and TeslaMateApi can add trips, charges, and long term history. You can use demo mode without a server.</p></details>
+          <details class="reveal"><summary>Does Tesstats send data to its developer?<span>+</span></summary><p>No. The app connects to services you configure. The Tesstats project does not operate a tracking or vehicle data backend.</p></details>
+          <details class="reveal"><summary>What devices are supported?<span>+</span></summary><p>Tesstats supports iPhone and iPad on iOS 18 or later, plus Mac on macOS 15 or later. It also includes widgets and an Apple Watch companion.</p></details>
+          <details class="reveal"><summary>Is Driver Display a navigation system?<span>+</span></summary><p>No. It can show route context already present in the available data, but it does not provide turn instructions. Treat it as a supplemental display.</p></details>
+          <details class="reveal"><summary>Where do I get help?<span>+</span></summary><p>Use the <a href="https://github.com/jorgepb96/tesstats/issues">Tesstats issue tracker</a> for app issues. Use Tesla Support for Tesla accounts and vehicles. Use TeslaMate support for the TeslaMate server.</p></details>
+        </div>
+      </div>
+    </section>
+
+    <section class="final-cta" id="download">
+      <div class="cta-lines" aria-hidden="true"></div>
+      <div class="section-shell cta-inner reveal">
+        <img src="assets/brand/app-icon.png" alt="Tesstats app icon" width="118" height="118">
+        <p class="section-kicker">Your data already has a story</p>
+        <h2>See the drive differently.</h2>
+        <p>Private by design. Read only. Built for people who want their data to feel useful.</p>
+        <div class="hero-actions">
+          <a class="button button-testflight" href="https://testflight.apple.com/join/pc7ywfgu" aria-label="Join the Tesstats public beta on TestFlight">
+            <svg class="testflight-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="2.1"></circle><path d="M12 9.9 9.1 4.7a2.1 2.1 0 0 1 3.6-2.1l2.9 5.2M13.8 13.1l6 .1a2.1 2.1 0 0 1 0 4.2l-6-.1M10.2 13.1l-3 5.1a2.1 2.1 0 0 1-3.6-2.1l3-5.1"></path></svg>
+            <span>TestFlight</span><small>Public beta</small>
+          </a>
+          <a class="button button-outline-light" href="https://github.com/jorgepb96/tesstats/issues">Support <span>↗</span></a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="footer-top">
+      <a class="brand" href="#top"><img src="assets/brand/logo.svg" alt="" width="112" height="34"><span>Tesstats</span></a>
+      <p>A private, read only TeslaMate companion for your Apple devices.</p>
+      <a class="back-top" href="#top">Back to top ↑</a>
+    </div>
+    <div class="footer-links">
+      <div><strong>Product</strong><a href="#features">Features</a><a href="#driver-display">Driver Display</a><a href="#start">Get started</a><a href="#download">Download</a></div>
+      <div><strong>Support</strong><a href="support.html">Help center</a><a href="https://github.com/jorgepb96/tesstats/issues">Report an issue</a><a href="https://github.com/jorgepb96/tesstats/issues">Feature requests</a><a href="https://github.com/jorgepb96/tesstats">Source code</a></div>
+      <div><strong>Legal</strong><a href="privacy.html">Privacy</a><a href="terms.html">Terms</a><a href="disclaimer.html">Disclaimer</a></div>
+      <div><strong>Related services</strong><a href="https://www.tesla.com/support">Tesla Support</a><a href="https://docs.teslamate.org/">TeslaMate Docs</a><a href="https://github.com/tobiasehlert/teslamateapi">TeslaMateApi</a></div>
+    </div>
+    <div class="footer-bottom">
+      <p>© <span data-year>2026</span> Tesstats contributors. Free software under the <a href="https://github.com/jorgepb96/tesstats/blob/main/LICENSE">GNU AGPL-3.0</a>.</p>
+      <p>This project is an unofficial community tool and is not affiliated with, endorsed by, or supported by the official TeslaMate project. Tesstats is not affiliated with, endorsed by, sponsored by, or related in any way to Tesla, Inc. or the TeslaMate project. Tesla and TeslaMate are referenced only to describe compatibility.</p>
+    </div>
+  </footer>
+</body>
+</html>

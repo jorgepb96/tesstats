@@ -1,0 +1,16 @@
+{
+  "name": "Tesstats",
+  "short_name": "Tesstats",
+  "description": "Your drive, beautifully understood",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#070709",
+  "theme_color": "#070709",
+  "icons": [
+    {
+      "src": "assets/brand/app-icon.png",
+      "sizes": "1024x1024",
+      "type": "image/png"
+    }
+  ]
+}

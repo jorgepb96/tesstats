@@ -1,0 +1,319 @@
+import Foundation
+
+/// Orchestrates the live data path: chooses Demo or real MQTT, applies updates to the
+/// observable state map, drives notifications on transitions, caches snapshots offline,
+/// and reconnects with backoff. All observable mutation stays on the MainActor.
+@MainActor
+@Observable
+final class VehicleLiveService {
+    private(set) var states: [Int: VehicleState] = [:]
+    private(set) var cars: [CarSummary] = []
+    private(set) var status: ConnectionStatus = .notConfigured
+    private(set) var lastError: String?
+    private let emptyMotion = MotionEstimator()
+    private var motionByCar: [Int: MotionEstimator] = [:]
+    private var powerSampleDates: [Int: Date] = [:]
+    private var speedSampleDates: [Int: Date] = [:]
+    var motion: MotionEstimator { resolvedCarID.flatMap { motionByCar[$0] } ?? emptyMotion }
+    let driverTrip = DriverTripDistanceEstimator()
+    let driverConsumption = DriverTripConsumptionStore()
+
+    private let settings: SettingsStore
+    private let notifications: NotificationEngine
+    private let cache: CacheStore
+
+    private var client: MQTTClient?
+    private var consumeTask: Task<Void, Never>?
+    private var reconnectTask: Task<Void, Never>?
+    private var warmupTask: Task<Void, Never>?
+    private var intentionalStop = false
+    private var reconnectAttempt = 0
+    private var connectionEpoch = 0          // invalidates stale connections/tasks
+    private var lastCacheSave: [Int: Date] = [:]
+    private var cacheSourceIdentity: String?
+
+    init(settings: SettingsStore, notifications: NotificationEngine, cache: CacheStore) {
+        self.settings = settings
+        self.notifications = notifications
+        self.cache = cache
+    }
+
+    // MARK: - Resolved selection
+
+    var resolvedCarID: Int? {
+        if let id = settings.config.selectedCarID, states[id] != nil || cars.contains(where: { $0.id == id }) {
+            return id
+        }
+        return cars.first?.id ?? states.keys.sorted().first
+    }
+
+    var currentState: VehicleState? { resolvedCarID.flatMap { states[$0] } }
+    var currentTripDistanceKm: Double? { driverTrip.distance(for: resolvedCarID) }
+
+    func selectCar(_ id: Int) {
+        settings.config.selectedCarID = id
+        settings.save()
+    }
+
+    // MARK: - Lifecycle
+
+    func start() {
+        teardownConnection()
+        intentionalStop = false
+        lastError = nil
+
+        // Warm the UI from cache — off the main thread, so a cold launch never waits on disk.
+        warmupTask?.cancel()
+        let identity = settings.config.historySourceIdentity
+        if cacheSourceIdentity != identity {
+            states.removeAll()
+            cars.removeAll()
+            driverTrip.reset()
+            driverConsumption.reset()
+            motionByCar.removeAll()
+            powerSampleDates.removeAll()
+            speedSampleDates.removeAll()
+            lastCacheSave.removeAll()
+            cacheSourceIdentity = identity
+        }
+        let cache = cache.scoped(to: settings.config)
+        warmupTask = Task { @MainActor [weak self] in
+            let snapshots = await Task.detached(priority: .userInitiated) { cache.loadAllSnapshots() }.value
+            guard let self, !Task.isCancelled else { return }
+            for snapshot in snapshots where self.states[snapshot.carID] == nil {
+                self.states[snapshot.carID] = snapshot
+                self.upsertCar(from: snapshot)
+            }
+        }
+
+        let config = settings.config
+        if config.demoMode {
+            startDemo()
+        } else if config.hasMQTTConfigured {
+            startLive()
+        } else {
+            status = .notConfigured
+        }
+    }
+
+    func stop() {
+        intentionalStop = true
+        teardownConnection()
+        if status != .notConfigured { status = .disconnected }
+    }
+
+    func restart() {
+        stop()
+        start()
+    }
+
+    /// Called when the Watch companion becomes active. It immediately re-sends the assembled
+    /// state and reconnects a stale/suspended MQTT session so retained TeslaMate topics can
+    /// repopulate the Watch without requiring the iPhone UI to be opened first.
+    func refreshForWatch() {
+        guard settings.isConfigured else { return }
+        if let current = currentState {
+            WidgetBridge.update(state: current,
+                                carName: name(for: current.carID, hint: current.displayName),
+                                config: settings.config,
+                                cache: cache,
+                                force: true)
+        }
+        guard !settings.config.demoMode, settings.config.hasMQTTConfigured else { return }
+        let age = currentState.map { Date().timeIntervalSince($0.lastUpdated) } ?? .infinity
+        if status != .connected || age > 15 {
+            restart()
+        }
+    }
+
+    private func teardownConnection() {
+        connectionEpoch &+= 1   // invalidate any in-flight consume/reconnect tasks
+        consumeTask?.cancel(); consumeTask = nil
+        reconnectTask?.cancel(); reconnectTask = nil
+        warmupTask?.cancel(); warmupTask = nil
+        let c = client
+        client = nil
+        emptyMotion.reset()
+        for estimator in motionByCar.values { estimator.reset() }
+        if let c { Task { await c.disconnect() } }
+    }
+
+    // MARK: - Demo
+
+    private func startDemo() {
+        status = .demo
+        if cars.isEmpty { cars = [DemoDataProvider.car] }
+        if settings.config.selectedCarID == nil { settings.config.selectedCarID = DemoDataProvider.car.id }
+        let provider = DemoDataProvider(scenario: .launchValue)
+        consumeTask = Task { @MainActor [weak self] in
+            for await snapshot in provider.liveStream() {
+                guard let self, !self.intentionalStop else { break }
+                self.commitFull(snapshot)
+            }
+        }
+    }
+
+    // MARK: - Live MQTT
+
+    private func startLive() {
+        // Invalidate and tear down any previous connection so only ONE is ever live.
+        connectionEpoch &+= 1
+        let epoch = connectionEpoch
+        consumeTask?.cancel(); consumeTask = nil
+        if let old = client { client = nil; Task { await old.disconnect() } }
+
+        status = .connecting
+        let mqttConfig = settings.makeMQTTConfig()
+        let topicRoot = settings.config.topicRoot
+        let client = MQTTClient(config: mqttConfig)
+        self.client = client
+
+        consumeTask = Task { @MainActor [weak self] in
+            guard let self else { return }
+            do {
+                try await client.connect(topics: ["\(topicRoot)/+/#"])
+                guard epoch == self.connectionEpoch else { await client.disconnect(); return }
+                self.status = .connected
+                self.reconnectAttempt = 0
+                for await msg in client.publishes {
+                    if self.intentionalStop || epoch != self.connectionEpoch { break }
+                    self.handle(topic: msg.topic, payload: msg.payload, topicRoot: topicRoot)
+                }
+                self.handleDisconnect(epoch: epoch)
+            } catch {
+                if epoch == self.connectionEpoch {
+                    self.lastError = error.localizedDescription
+                    self.status = .failed(error.localizedDescription)
+                }
+                self.handleDisconnect(epoch: epoch)
+            }
+        }
+    }
+
+    private func handle(topic: String, payload: String, topicRoot: String) {
+        let prefix = topicRoot + "/"
+        guard topic.hasPrefix(prefix) else { return }
+        let rest = String(topic.dropFirst(prefix.count))
+        let parts = rest.split(separator: "/", maxSplits: 1).map(String.init)
+        guard parts.count == 2, let carID = Int(parts[0]) else { return }
+        applyMetric(carID: carID, metric: parts[1], value: payload)
+    }
+
+    private func handleDisconnect(epoch: Int) {
+        // Ignore drops from a superseded connection — only the current one may reconnect.
+        guard epoch == connectionEpoch, !intentionalStop else { return }
+        if status.isLive { status = .disconnected }
+        scheduleReconnect()
+    }
+
+    private func scheduleReconnect() {
+        guard !intentionalStop, !settings.config.demoMode, settings.config.hasMQTTConfigured else { return }
+        reconnectTask?.cancel()
+        reconnectAttempt += 1
+        let delay = min(30.0, pow(2.0, Double(min(reconnectAttempt, 5))))
+        reconnectTask = Task { @MainActor [weak self] in
+            try? await Task.sleep(for: .seconds(delay))
+            guard let self, !self.intentionalStop else { return }
+            self.startLive()
+        }
+    }
+
+    // MARK: - State application
+
+    private func applyMetric(carID: Int, metric: String, value: String) {
+        var current = states[carID] ?? VehicleState(carID: carID)
+        let previous = current
+        current.apply(metric: metric, value: value)
+        if metric == "power" { powerSampleDates[carID] = current.lastUpdated }
+        if metric == "speed" { speedSampleDates[carID] = current.lastUpdated }
+        let power = recentPower(for: current, at: current.lastUpdated)
+        motion(for: carID).ingest(speedKmh: current.speed, powerKw: power,
+                                 speedChanged: metric == "speed", at: current.lastUpdated)
+        driverTrip.ingest(previous: previous, current: current)
+        var telemetry = current
+        telemetry.power = power
+        if let date = speedSampleDates[carID], current.lastUpdated.timeIntervalSince(date) <= 5 {
+            telemetry.speed = current.speed
+        } else { telemetry.speed = nil }
+        driverConsumption.ingest(previous: previous, current: telemetry)
+        states[carID] = current
+        upsertCar(from: current)
+        notifications.process(previous: previous, current: current, carName: name(for: carID, hint: current.displayName))
+        saveCacheThrottled(current)
+        pushToWidgets(previous: previous, current: current)
+    }
+
+    private func commitFull(_ snapshot: VehicleState) {
+        let previous = states[snapshot.carID]
+        states[snapshot.carID] = snapshot
+        powerSampleDates[snapshot.carID] = snapshot.power == nil ? nil : snapshot.lastUpdated
+        speedSampleDates[snapshot.carID] = snapshot.speed == nil ? nil : snapshot.lastUpdated
+        motion(for: snapshot.carID).ingest(speedKmh: snapshot.speed, powerKw: snapshot.power,
+                                         speedChanged: true, at: snapshot.lastUpdated)
+        driverTrip.ingest(previous: previous, current: snapshot)
+        driverConsumption.ingest(previous: previous, current: snapshot)
+        upsertCar(from: snapshot)
+        notifications.process(previous: previous, current: snapshot, carName: name(for: snapshot.carID, hint: snapshot.displayName))
+        saveCacheThrottled(snapshot)
+        pushToWidgets(previous: previous, current: snapshot)
+    }
+
+    /// Mirror the actively-selected car to the home/lock widgets and the charging Live Activity.
+    private func pushToWidgets(previous: VehicleState?, current: VehicleState) {
+        guard current.carID == resolvedCarID else { return }
+        let chargingChanged = (previous?.isCharging ?? false) != current.isCharging
+        WidgetBridge.update(state: current,
+                            carName: name(for: current.carID, hint: current.displayName),
+                            config: settings.config,
+                            cache: cache,
+                            force: chargingChanged)
+    }
+
+    private func upsertCar(from state: VehicleState) {
+        let id = state.carID
+        if let idx = cars.firstIndex(where: { $0.id == id }) {
+            if let name = state.displayName, !name.isEmpty { cars[idx].displayName = name }
+            if let model = state.model { cars[idx].model = model }
+        } else {
+            cars.append(CarSummary(id: id, displayName: state.displayName ?? "Car \(id)", model: state.model))
+            cars.sort { $0.id < $1.id }
+        }
+        if settings.config.selectedCarID == nil {
+            settings.config.selectedCarID = id
+        }
+    }
+
+    private func name(for carID: Int, hint: String?) -> String {
+        if let hint, !hint.isEmpty { return hint }
+        return cars.first(where: { $0.id == carID })?.title ?? "Tesla"
+    }
+
+    private func saveCacheThrottled(_ state: VehicleState) {
+        let now = Date()
+        if let last = lastCacheSave[state.carID], now.timeIntervalSince(last) < 10 { return }
+        lastCacheSave[state.carID] = now
+        cache.scoped(to: settings.config).saveSnapshotInBackground(state)
+    }
+
+    func currentPowerKw(at date: Date = Date()) -> Double? {
+        currentState.flatMap { recentPower(for: $0, at: date) }
+    }
+
+    var currentSpeedSample: DriverSpeedSample? {
+        guard let state = currentState, let speed = state.speed,
+              speed.isFinite, speed >= 0, let date = speedSampleDates[state.carID] else { return nil }
+        return DriverSpeedSample(speedKmh: speed, date: date, source: .teslaMate, accuracyKmh: nil)
+    }
+
+    private func recentPower(for state: VehicleState, at date: Date) -> Double? {
+        guard let power = state.power, let sampleDate = powerSampleDates[state.carID] else { return nil }
+        return DriverPowerSample(powerKw: power, date: sampleDate).value(at: date)
+    }
+
+    private func motion(for carID: Int) -> MotionEstimator {
+        if let estimator = motionByCar[carID] { return estimator }
+        let estimator = MotionEstimator()
+        motionByCar[carID] = estimator
+        return estimator
+    }
+}

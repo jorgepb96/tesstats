@@ -1,0 +1,195 @@
+{
+    "name": "Tesstats",
+    "identifier": "com.drakonis96.tesstats",
+    "subtitle": "Read-only Tesla stats from your own TeslaMate.",
+    "description": "Tesstats source — a beautiful, read-only stats app for your Tesla, powered by your self-hosted TeslaMate server.",
+    "iconURL": "https://raw.githubusercontent.com/Drakonis96/tesstats/main/docs/icon.png",
+    "website": "https://github.com/Drakonis96/tesstats",
+    "tintColor": "#B30333",
+    "apps": [
+        {
+            "name": "Tesstats",
+            "bundleIdentifier": "com.tesstats.app",
+            "developerName": "Drakonis96",
+            "subtitle": "Read-only Tesla stats — works with your self-hosted TeslaMate.",
+            "localizedDescription": "Tesstats is a beautiful, read-only stats app for your Tesla, powered by your own self-hosted TeslaMate server.\n\n• Live dashboard: battery, range, charging, climate, security, tire pressure, location.\n• Trips with maps and consumption.\n• Charging sessions with real charge curves (kW vs %SoC).\n• Battery health and degradation over time.\n• Rich statistics: trends, records, cost, CO2 saved, phantom drain, heatmap.\n• Home Screen & Lock Screen widgets, a charging Live Activity, and Siri shortcuts.\n• Notifications, multi-car, offline cache, encrypted backups, CSV/JSON/GPX export.\n• Optional foreground-only Bluetooth telemetry for Driver Copilot using a vehicle-approved Vehicle Monitor key.\n\nTesstats contains no vehicle-control operations: it cannot drive, unlock, charge or otherwise actuate the car. Server connections are encrypted by default.\n\nFree and open source under the GNU AGPL-3.0: https://github.com/jorgepb96/tesstats\n\nThis project is an unofficial community tool and is not affiliated with, endorsed by, or supported by the official TeslaMate project.\n\nTesstats is an unofficial, independent app. It is not affiliated with, endorsed by, sponsored by, or related in any way to Tesla, Inc. or the TeslaMate project. \"Tesla\" is a trademark of Tesla, Inc. \"TeslaMate\" is a trademark of the TeslaMate project.",
+            "iconURL": "https://raw.githubusercontent.com/Drakonis96/tesstats/main/docs/icon.png",
+            "tintColor": "#B30333",
+            "category": "utilities",
+            "screenshotURLs": [
+                "https://raw.githubusercontent.com/Drakonis96/tesstats/main/docs/screenshots/02-dashboard.png",
+                "https://raw.githubusercontent.com/Drakonis96/tesstats/main/docs/screenshots/05-charging.png",
+                "https://raw.githubusercontent.com/Drakonis96/tesstats/main/docs/screenshots/04-trips.png",
+                "https://raw.githubusercontent.com/Drakonis96/tesstats/main/docs/screenshots/03-battery.png",
+                "https://raw.githubusercontent.com/Drakonis96/tesstats/main/docs/screenshots/06-settings.png"
+            ],
+            "versions": [
+                {
+                    "version": "5.2.6",
+                    "date": "2026-09-02",
+                    "localizedDescription": "Tesstats 5.2.6",
+                    "downloadURL": "https://github.com/Drakonis96/tesstats/releases/download/v5.2.6/Tesstats.ipa",
+                    "size": 4650536,
+                    "minOSVersion": "18.0"
+                },
+                {
+                    "version": "5.2.3",
+                    "date": "2026-09-01",
+                    "localizedDescription": "## What’s new\n\n- The vehicle arrow in Driver Copilot now uses the app’s active accent color.\n- The marker updates with the user-selected accent and retains a neutral shadow for map contrast.\n- Verified in both portrait and landscape Driver Copilot layouts.\n\n## Downloads\n\n- Tesstats.ipa: unsigned iOS package for alternative installation, including the widget extension.\n- Tesstats-macOS.dmg: universal macOS build for Apple silicon and Intel.\n\nThe TestFlight build is distributed separately to internal testers only.",
+                    "downloadURL": "https://github.com/Drakonis96/tesstats/releases/download/v5.2.3/Tesstats.ipa",
+                    "size": 4626672,
+                    "minOSVersion": "18.0"
+                },
+                {
+                    "version": "5.2.2",
+                    "date": "2026-09-01",
+                    "localizedDescription": "## What’s new\n\n- Keeps the vehicle arrow clearly visible above the speed dial in portrait Driver Copilot.\n- Moves the circular P/R/N/D selector upward in both orientations so the selected gear stays clear of the activity bar.\n- Adds a dedicated close button immediately to the right of the trash control in the notification inbox.\n- Refreshes the portrait and landscape Driver Copilot screenshots.\n\n## Validation\n\n- 72 unit tests and 13 UI tests passed.\n- Signed iOS Release build passed with widgets and Apple Watch app.\n- The GitHub IPA keeps the widget and omits the Watch app for sideloading compatibility.\n- The macOS DMG is universal for Apple silicon and Intel.\n\nTestFlight build: **5.2.2 (16)**, internal testing only.",
+                    "downloadURL": "https://github.com/Drakonis96/tesstats/releases/download/v5.2.2/Tesstats.ipa",
+                    "size": 4620505,
+                    "minOSVersion": "18.0"
+                },
+                {
+                    "version": "5.2.1",
+                    "date": "2026-09-01",
+                    "localizedDescription": "## What’s new\n\n- Redesigned portrait Driver Copilot with the same immersive, full-screen map treatment as landscape mode.\n- Added compact floating route, dynamics, range, odometer, and trip information that adapts to the enabled modules.\n- Reworked the P/R/N/D selector so every gear follows the circular dial in both orientations.\n- Kept the selected gear badge fully contained inside the speed dial.\n- Updated the Driver Copilot screenshots and expanded UI coverage for both orientations.\n\n## Downloads\n\n- `Tesstats.ipa`: unsigned iOS package for alternative installation, including the widget extension.\n- `Tesstats-macOS.dmg`: universal macOS build for Apple silicon and Intel.\n\nThe TestFlight build is distributed separately to internal testers only.",
+                    "downloadURL": "https://github.com/Drakonis96/tesstats/releases/download/v5.2.1/Tesstats-5.2.1.ipa",
+                    "size": 4617579,
+                    "minOSVersion": "18.0"
+                },
+                {
+                    "version": "5.2.0",
+                    "date": "2026-09-01",
+                    "localizedDescription": "## What's new\n\n- Completely redesigned Driver Display in landscape: a full-screen map, centered speed and vertical PRND, clearer route/range information, odometer and current-trip distance, with a dynamic layout that adapts to the active modules.\n- Optional read-only Bluetooth telemetry for Driver Copilot, paired once per vehicle and isolated by VIN. Keys are protected by the Secure Enclave, connections run only while Driver Display is in the foreground, and the app contains no vehicle-control operations.\n- Automatic fallback between Bluetooth, iPhone GPS and TeslaMate so driving data remains useful if one source is unavailable.\n- More compact and balanced 5-by-2 security status grid, plus tap-to-copy VIN.\n- Unified Tesla-blue accent colors by default, while preserving the user's chosen custom accent.\n- New professionally rendered white app icon with a clearer red Model 3 silhouette.\n- Improved Driver Display screenshots and README presentation.\n\n## Validation\n\n- 72 unit tests passed.\n- 12 UI tests passed on iPhone 16 Pro simulator.\n- Signed iOS Release build passed, including the widget and Apple Watch app.\n- The GitHub IPA keeps the widget but omits the Watch app for broader sideloading compatibility.\n\nTestFlight build: **5.2.0 (14)**.",
+                    "downloadURL": "https://github.com/Drakonis96/tesstats/releases/download/v5.2.0/Tesstats.ipa",
+                    "size": 4667098,
+                    "minOSVersion": "18.0"
+                },
+                {
+                    "version": "5.1.0",
+                    "date": "2026-09-01",
+                    "localizedDescription": "## Novedades\n\n- Modo de conducción rediseñado para vertical y horizontal, con la velocidad centrada y un selector P/R/N/D más claro y dinámico.\n- Velocidad híbrida que combina el GPS del iPhone con TeslaMate y elige automáticamente la fuente más fiable.\n- Controles de seguridad redistribuidos en una cuadrícula compacta y equilibrada de 5 × 2.\n- El VIN ahora se puede copiar al portapapeles con un toque.\n- Diagnóstico de notificaciones mejorado, avisos en primer plano y comprobación de notificaciones remotas.\n- Capturas y documentación de lanzamiento actualizadas.\n\n## Distribución\n\n- `Tesstats.ipa`: paquete sin firmar para AltStore/SideStore, con el widget incluido.\n- `Tesstats-macOS.dmg`: aplicación universal para Apple Silicon e Intel, firmada ad hoc.\n- TestFlight 5.1.0 (13): incluye la app, los widgets y la app de Apple Watch, con APNs de producción.\n\n## Verificación\n\n- 61 pruebas unitarias y 12 pruebas de interfaz: 73 superadas, sin fallos.\n- Compilaciones Release de iOS y macOS verificadas.\n- Archivo de TestFlight y firma validados antes de la subida.",
+                    "downloadURL": "https://github.com/Drakonis96/tesstats/releases/download/v5.1.0/Tesstats.ipa",
+                    "size": 3262872,
+                    "minOSVersion": "18.0"
+                },
+                {
+                    "version": "0.5.0",
+                    "date": "2026-08-31",
+                    "localizedDescription": "## Novedades\n\n- Driver Display refinado en vertical y horizontal: temperatura, presión de las cuatro ruedas, cuentakilómetros, distancia del trayecto, marcha con centrado óptico, potencia, regeneración, aceleración y frenada estimadas.\n- Modo de respaldo cuando TeslaMate no está disponible: velocidad y movimiento mediante los sensores del iPhone, posición y mapa local mediante GPS, temperatura local y estado de conexión claramente identificado.\n- Mapas ampliables e interactivos para Superchargers, viajes, cargas, aparcamientos y demás vistas cartográficas.\n- Interfaz adaptativa más cercana a la experiencia Tesla, con navegación reorganizada, controles compactos, soporte de Liquid Glass y correcciones de scroll hasta el último elemento.\n- Nueva cuadrícula de Security: cierre, Sentry, ocupación, ventanas, maleteros y las cuatro puertas se muestran siempre; los estados activos conservan su color y los inactivos aparecen en gris.\n- Localización completa en español e inglés, con español automático para usuarios españoles e inglés para el resto, además del selector manual en Ajustes.\n- Widgets, Live Activity y Apple Watch respetan también el idioma seleccionado.\n- Tesstats se distribuye bajo licencia MIT desde esta versión.\n\n## Distribución\n\n- `Tesstats.ipa`: paquete sin firma para AltStore o SideStore, compatible con iOS/iPadOS 18 o posterior e incluyendo el widget. La app de Watch se omite porque los sideloaders no pueden provisionarla.\n- `Tesstats-macOS.dmg`: aplicación universal arm64 y x86_64 para macOS 15 o posterior, con firma ad hoc.\n\n## Verificación\n\n- 66 pruebas unitarias y de interfaz superadas, sin fallos ni omisiones.\n- Compilaciones Release de iOS y macOS completadas.\n- IPA verificado, con widget y sin bundle de Watch.\n- DMG y firma de la aplicación macOS verificados.",
+                    "downloadURL": "https://github.com/Drakonis96/tesstats/releases/download/v0.5.0/Tesstats.ipa",
+                    "size": 3186700,
+                    "minOSVersion": "18.0"
+                },
+                {
+                    "version": "0.4.0",
+                    "date": "2026-08-31",
+                    "localizedDescription": "## Qué cambia\n\n- Nueva interfaz adaptativa inspirada en Tesla para iPhone, iPad y Mac.\n- Pantalla del conductor configurable en vertical y horizontal con velocidad, marcha, potencia y regeneración, aceleración y frenada estimadas, batería, autonomía, alertas, ruta activa y mini mapa.\n- Presets, módulos reordenables, temas, tamaño de velocidad, ancho del mapa, brillo activo y ajustes rápidos.\n- Navegación y paneles refinados, modo demo ampliado y localización en inglés y español.\n- La ruta usa únicamente los datos reales de active_route disponibles en TeslaMate; nunca inventa indicaciones.\n- Tesstats continúa siendo completamente de solo lectura y no envía comandos al vehículo.\n\n## Distribución\n\n- Tesstats.ipa: paquete sin firma para AltStore, iOS/iPadOS 18 o posterior, con widgets incluidos. La app de Watch se omite porque los sideloaders no pueden provisionarla.\n- Tesstats-macOS.dmg: app universal arm64 y x86_64 para macOS 15 o posterior, con firma ad-hoc.\n\n## Verificación\n\n- 51 pruebas unitarias y 4 pruebas de interfaz superadas.\n- Builds Release de iOS y macOS completados y artefactos validados.",
+                    "downloadURL": "https://github.com/Drakonis96/tesstats/releases/download/v0.4.0/Tesstats.ipa",
+                    "size": 3071642,
+                    "minOSVersion": "18.0"
+                },
+                {
+                    "version": "0.3.1",
+                    "date": "2026-08-30",
+                    "localizedDescription": "Tesstats 0.3.1 removes the remaining loading stalls and makes every configurable section fully rearrangeable.\n\n### Loading stays responsive\n- Cache reads, JSON decoding, history aggregation and widget lookups stay off the main thread.\n- Cached history remains interactive while fresher server data arrives.\n- Large GPS traces are sampled before reaching MapKit, camera updates are debounced, and trip previews avoid repeated full-path scans.\n- Parking derivation now scales linearly across drives and charges, with paginated rendering for long histories.\n\n### Every section is yours\n- Lists, filters, maps, totals and header cards can all be hidden or restored.\n- Previously fixed Dashboard cards and the Stats date filter now participate in the saved layout.\n- Parking has its own complete layout editor.\n- Blocks can be moved with drag handles or explicit up/down controls, with stable accessibility identifiers.\n\n### Verified\n- 46 unit tests and the hide/reorder UI test pass.\n- iOS and macOS builds compile successfully.\n\nSideload the attached Tesstats.ipa with AltStore or SideStore. The IPA is unsigned so AltStore can sign it, includes the widget, and omits the Watch app because AltStore cannot provision it. Requires iOS 18.",
+                    "downloadURL": "https://github.com/Drakonis96/tesstats/releases/download/v0.3.1/Tesstats.ipa",
+                    "size": 1888306,
+                    "minOSVersion": "18.0"
+                },
+                {
+                    "version": "0.3.0",
+                    "date": "2026-08-28",
+                    "localizedDescription": "The interface no longer freezes while the app works through a long history — and there is something to look at while it does.\n\n### Nothing blocks the interface\nEvery heavy calculation now runs in the background. Whatever has already been downloaded stays on screen and stays scrollable while the rest arrives, so switching to Trips or Stats on a multi-year history is instant instead of a stall.\n\nParking, Battery, Trips, Charging and Stats used to re-derive their analytics on every redraw, several times per screen, while the live MQTT feed was already redrawing. Deriving parking sessions and rebuilding the battery curve now happen once per real change, off the main thread. Scrubbing the battery and degradation charts is smooth again.\n\n### A loading animation worth watching\nWhile a section waits for its data it shows the Tesstats logo in its own centre, with speed trails rushing past it. Each block keeps its place and its heading, so you can see what is coming. Filters and range pickers stay live throughout.\n\n### Cached history appears instantly\nThe offline cache is now read in the background and shown immediately on launch, before the server is contacted. A small \"Updating…\" badge floats at the bottom while fresher data is on the way — nothing is hidden and nothing is disabled while it loads.\n\n### Also\n- Charging drew its search and filter bar twice; now once.\n- Settings → About links to the source code (AGPL-3.0).\n- Added the non-affiliation notice for Tesla, Inc. and the TeslaMate project.\n\nSideload with AltStore. Requires iOS 18.",
+                    "downloadURL": "https://github.com/Drakonis96/tesstats/releases/download/v0.3.0/Tesstats.ipa",
+                    "size": 1858399,
+                    "minOSVersion": "18.0"
+                },
+                {
+                    "version": "0.2.0",
+                    "date": "2026-07-30",
+                    "localizedDescription": "Rearrangeable screens, tappable units, tariff plans — and the app is finally translated end to end.\n\n### Every screen is yours to arrange\nSummary, Trips, Charging, Battery and Stats are built from blocks you can reorder or hide, from the ▦ button on the screen itself or from Settings. Defaults now lead with what most people open the app for — how the car is, and what it cost — with the enthusiast blocks further down.\n\n### Tap to change units\nConsumption switches between Wh/km and kWh/100 km, and tyre pressure between bar and psi, by tapping any value. Every value switches together and the choice is remembered.\n\n### Tariff plans\nName a plan, give it price bands, and charging sessions TeslaMate did not cost are priced by when they happened. You set only when each band starts — the day closes itself, so the bands always add up to 24 h. Existing time-of-use setups are migrated automatically. Per-location prices can now be set from a charging session itself, which also explains where its cost came from.\n\n### The app follows the language you pick\n179 strings had never been added to the catalogue and always showed in English. Beyond that, dates, weekday names and chart axis labels are formatted from a locale rather than the string table, so a Battery chart could read `sáb / lun / mié` inside an otherwise English screen. Both are fixed, in both directions.\n\n### It stops stalling\nEvery scrollable screen re-derived all of its analytics on each redraw. On a three-year history, one pass through Stats measured just over a second of blocked main thread — and the live feed triggers several a second. Screens now recompute only when something actually changed, and Stats does it off the main thread. The worst offender, the phantom-drain estimate, went from 948 ms to 4 ms. The launch splash no longer sits for a second and a half before showing anything.\n\n### Maps follow the car\nDrive somewhere new and the map stayed framed on the previous place with the marker off-screen. All four maps now re-aim: the live location, the history map after a filter change, and a trip's route once its real GPS trace arrives.\n\n### Smaller fixes\n- The trip row no longer breaks prices across two lines or truncates the efficiency label.\n- A tariff plan could never be opened — the selection circle was swallowing the row's tap.\n- The settings tabs and the gear button had no VoiceOver name.\n\n---\nSideload the attached `Tesstats.ipa` with AltStore. The watch app is stripped from the IPA because AltStore cannot provision it.",
+                    "downloadURL": "https://github.com/Drakonis96/tesstats/releases/download/v0.2.0/Tesstats.ipa",
+                    "size": 2718716,
+                    "minOSVersion": "18.0"
+                },
+                {
+                    "version": "0.1.7",
+                    "date": "2026-07-10",
+                    "localizedDescription": "Tesstats v0.1.7 — Sentry alerts that actually reach you.\n\nIf you never heard a Sentry alert before, this release is why: the notification existed but was easy to miss (default sound, silenced by quiet hours, re-firing on every banner repeat), and app-closed delivery via APNs is impossible on sideloaded installs. All addressed.\n\nSentry & security:\n• Distinct bundled alarm sound and time-sensitive delivery for the possible-Sentry alert, so it stands out without looking at the phone.\n• The Sentry alert can break through quiet hours (on by default) — that 3 AM warning is the one you want.\n• 10-minute cooldown so one incident is one alert, not a burst.\n• New optional \"Sentry armed / disarmed\" notifications from the reliable sentry_mode signal.\n• Live Sentry-signal diagnostic in Settings → Notifications: see sentry_mode and the car's screen state update in real time, so you can confirm your TeslaMate emits the signal (arm Sentry, keep the screen open, walk up to the car).\n\nApp-closed alerts (the important fix):\n• The optional push microservice now delivers through ntfy and generic webhooks, not just APNs. Sideloaded (AltStore) apps are signed without the push entitlement, so APNs can never reach them — ntfy (no Apple account, instant) or a Home Assistant webhook (sirens, lights, Telegram…) now cover that case. Server README rewritten around the three options; a 10-minute server-side Sentry cooldown matches the app.\n\nAlso: adding new notification preferences no longer resets your saved ones. Full English/Spanish localization.\n\nNote: Sentry detection is inferred from the car's screen banner and TeslaMate polls every ~30 s, so very brief banners can still be missed. The video clip lives on the car's USB and is never available via TeslaMate.",
+                    "downloadURL": "https://github.com/Drakonis96/tesstats/releases/download/v0.1.7/Tesstats.ipa",
+                    "size": 2460439,
+                    "minOSVersion": "18.0"
+                },
+                {
+                    "version": "0.1.6",
+                    "date": "2026-07-10",
+                    "localizedDescription": "Tesstats v0.1.6 — smarter costs, richer charts, faster sync.\n\nNew:\n• Time-of-use electricity tariffs — define price bands by time of day (bands may cross midnight); unpriced sessions are costed by how much of their duration falls in each band. Recorded costs and per-location prices still win.\n• Trip tags — label drives Work/Personal from the trip detail, filter the trips list by tag, and export the tag in CSV/JSON. Stored only on your device.\n• Battery over time — a new 7/30-day state-of-charge chart on the Battery tab, reconstructed from drive and charge boundaries, with charging sessions dotted.\n• Year-over-year overlay in the monthly trends chart (current year bars vs previous year line), for distance, energy, cost and consumption.\n• Touch scrubbing — drag on the charge curve, degradation curve and monthly trends to inspect exact values.\n• Activity heatmap now shows month labels, and tapping a day reveals its date, drive count and distance.\n• Apple Watch companion app — battery gauge, range, state and charging progress, fed by the iPhone app. (Watch apps can't be provisioned by sideloading; the companion works when built from source via Xcode.)\n\nImproved:\n• Incremental history sync — automatic loads stop downloading as soon as they reach already-cached records, making refreshes much faster on multi-year histories. Pull-to-refresh still re-downloads everything.\n• Battery health is now a main tab. The tab bar holds five real tabs (Summary, Trips, Charging, Battery, More) — six tabs previously made iOS hide Stats and the More hub behind a generic system list. Parking lives in More → Areas.\n• Cleaner dashboard: brand logo moved into the toolbar, and the floating menu was replaced by a direct Notifications button.\n• Decluttered More hub and removal of dead-end placeholder screens.\n• Score rings are labeled (Efficiency / Drain / vs petrol) with VoiceOver support.\n• The month-over-month card now states that it compares full calendar months.\n• Switching tabs after a failed load retries automatically.\n• Spanish translations for everything new, plus several missing ones.",
+                    "downloadURL": "https://github.com/Drakonis96/tesstats/releases/download/v0.1.6/Tesstats.ipa",
+                    "size": 2379485,
+                    "minOSVersion": "18.0"
+                },
+                {
+                    "version": "0.1.5",
+                    "date": "2026-07-02",
+                    "localizedDescription": "Tesstats v0.1.5 focuses on a read-only visual upgrade.\n\n- Adds a map-first dashboard with demo banner, contextual tutorial, last drive, 30-day efficiency and 48-hour activity timeline.\n- Adds visual map/list views for trips and charging, including daily grouping, route previews, charge points and cost estimates.\n- Adds a read-only Parking section derived from idle gaps, with live parking sessions and detail charts.\n- Adds a local internal notification inbox with filters and persistence.\n- Adds the More hub for read-only areas like stats, battery health, parking, notifications and future modules.\n\nNo remote vehicle commands, Fleet API control, automations, social features, Pro/paywall or Dashcam Studio are included in this release.",
+                    "downloadURL": "https://github.com/Drakonis96/tesstats/releases/download/v0.1.5/Tesstats.ipa",
+                    "size": 2222700,
+                    "minOSVersion": "18.0"
+                },
+                {
+                    "version": "0.1.4",
+                    "date": "2026-06-07",
+                    "localizedDescription": "More from your TeslaMate data:\n• Battery health now uses TeslaMate's official calculation (capacity & range, new vs now).\n• Software update history — every firmware version with its install date.\n• Charging efficiency and the energy lost to charging.\n• Optional price per charging location for more accurate cost estimates.\n• Peak regeneration record, plus per-trip regen and usable battery.\n• Low tire-pressure warnings straight from the car.\n• Fixed the cost trend chart, and the weekday chart now starts on Monday.",
+                    "downloadURL": "https://github.com/Drakonis96/tesstats/releases/download/v0.1.4/Tesstats.ipa",
+                    "size": 1810955,
+                    "minOSVersion": "18.0"
+                },
+                {
+                    "version": "0.1.3",
+                    "date": "2026-06-06",
+                    "localizedDescription": "Themes & display polish:\n• New light theme alongside the default dark theme (Settings → Appearance).\n• Pick your accent color from 10 presets — it's applied across the whole app.\n• Activity heatmap now spans the full card width, so its left and right margins match.",
+                    "downloadURL": "https://github.com/Drakonis96/tesstats/releases/download/v0.1.3/Tesstats.ipa",
+                    "size": 1739372,
+                    "minOSVersion": "18.0"
+                },
+                {
+                    "version": "0.1.2",
+                    "date": "2026-06-06",
+                    "localizedDescription": "Accurate trip maps:\n• Trip routes are now drawn from the real GPS positions recorded by TeslaMate, fetched per drive from TeslaMateApi — no more geocoding the address text.\n• Fixes maps that landed in the wrong place when a city name was ambiguous (e.g. Toledo, Spain resolving to Toledo, USA).\n• Elevation profiles now come from the actual drive trace too.",
+                    "downloadURL": "https://github.com/Drakonis96/tesstats/releases/download/v0.1.2/Tesstats.ipa",
+                    "size": 1697654,
+                    "minOSVersion": "18.0"
+                },
+                {
+                    "version": "0.1.1",
+                    "date": "2026-06-05",
+                    "localizedDescription": "Connection robustness and clarity:\n• MQTT host now accepts a plain hostname — any scheme or path you paste is stripped automatically (fixes a DNS resolution error).\n• History API URL completes https:// if you omit it.\n• Unique MQTT client-id per connection prevents a reconnect loop that made the status flicker.\n• Clearer hints on the Server settings fields (host vs full URL).\n• Full Spanish and English localization with an in-app language selector.",
+                    "downloadURL": "https://github.com/Drakonis96/tesstats/releases/download/v0.1.1/Tesstats.ipa",
+                    "size": 1697313,
+                    "minOSVersion": "18.0"
+                },
+                {
+                    "version": "0.1.0",
+                    "date": "2026-06-05",
+                    "localizedDescription": "Initial public release.",
+                    "downloadURL": "https://github.com/Drakonis96/tesstats/releases/download/v0.1.0/Tesstats.ipa",
+                    "size": 1694649,
+                    "minOSVersion": "18.0"
+                }
+            ],
+            "version": "5.2.6",
+            "versionDate": "2026-09-02",
+            "versionDescription": "Tesstats 5.2.6",
+            "downloadURL": "https://github.com/Drakonis96/tesstats/releases/download/v5.2.6/Tesstats.ipa",
+            "size": 4650536,
+            "minOSVersion": "18.0",
+            "appPermissions": {
+                "entitlements": [],
+                "privacy": {
+                    "NSLocalNetworkUsageDescription": "Connects to your self-hosted TeslaMate server on your local network."
+                }
+            }
+        }
+    ],
+    "news": []
+}

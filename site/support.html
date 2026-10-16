@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#070709">
+  <meta name="description" content="Support guide and useful links for Tesstats users.">
+  <title>Support | Tesstats</title>
+  <link rel="icon" href="assets/brand/app-icon.png">
+  <link rel="stylesheet" href="assets/css/styles.css?v=5">
+  <script src="assets/js/main.js?v=3" defer></script>
+</head>
+<body class="legal-body">
+  <a class="skip-link" href="#legal-content">Skip to content</a>
+  <header class="site-header" data-header>
+    <a class="brand" href="index.html" aria-label="Tesstats home"><img src="assets/brand/logo.svg" alt="" width="112" height="34"><span>Tesstats</span></a>
+    <nav class="nav-links" aria-label="Legal navigation"><a href="privacy.html">Privacy</a><a href="terms.html">Terms</a><a href="disclaimer.html">Disclaimer</a><a href="support.html">Support</a></nav>
+    <a class="gh-badge" href="https://github.com/jorgepb96/tesstats" target="_blank" rel="noopener" title="Star Tesstats on GitHub" data-gh-badge><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82a7.42 7.42 0 0 1 2-.27c.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8Z"/></svg><span class="lbl">Star</span><span class="stars"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 .25a.75.75 0 0 1 .67.42l1.88 3.8 4.2.62c.61.09.86.84.41 1.28l-3.04 2.96.72 4.18a.75.75 0 0 1-1.09.79L8 12.35l-3.76 1.97a.75.75 0 0 1-1.08-.79l.72-4.18L.83 6.37a.75.75 0 0 1 .41-1.28l4.2-.61L7.32.67A.75.75 0 0 1 8 .25Z"/></svg><span data-star-count aria-label="Stars on GitHub">·</span></span></a>
+    <a class="header-cta" href="index.html">Product site</a>
+    <button class="menu-button" type="button" aria-label="Open menu" aria-expanded="false" data-menu-button><span></span><span></span></button>
+  </header>
+
+  <main class="legal-main" id="legal-content">
+    <header class="legal-hero">
+      <p class="section-kicker">Help without the runaround</p>
+      <h1>Support</h1>
+      <p>Find the right place for your question and the quickest checks for a connection problem.</p>
+    </header>
+
+    <div class="legal-layout">
+      <nav class="legal-nav" aria-label="On this page"><strong>On this page</strong><a href="#tesstats">Tesstats help</a><a href="#connect">Connection checks</a><a href="#services">Other services</a><a href="#report">Report an issue</a></nav>
+      <article class="legal-content">
+        <div class="legal-callout"><p><strong>Protect your data.</strong> Never post passwords, API keys, certificates, full server addresses, exact vehicle locations, Apple account details, or notification keys in a public issue.</p></div>
+
+        <section id="tesstats"><h2>1. Tesstats help</h2><p>Use the connection checklist below for common setup problems. It covers TeslaMate, secure MQTT, TeslaMateApi, connection fields, and demo mode.</p><p>Use the <a href="https://github.com/jorgepb96/tesstats/issues">Tesstats issue tracker on GitHub</a> for a reproducible app bug or feature request. Check existing issues first.</p></section>
+        <section id="connect"><h2>2. Quick connection checks</h2><ul><li>Confirm the phone or Mac can reach the server network</li><li>Check the MQTT host, port, transport, path, username, and password</li><li>Use MQTT over TLS or secure WebSocket for live data</li><li>Check that TeslaMateApi opens at the base URL you entered</li><li>Use the in app connection test for a clear status</li><li>Check certificate trust and Basic Auth settings</li><li>Try demo mode to confirm that the interface works without your server</li></ul><p>If a self signed certificate fails, confirm that it is current and matches the server you expect. Do not turn off security for a public connection.</p></section>
+        <section id="services"><h2>3. Help for connected services</h2><h3>Tesla vehicle or account</h3><p>Use <a href="https://www.tesla.com/support">Tesla Support</a> for official account, vehicle, service, warranty, charging, and safety help.</p><h3>TeslaMate server</h3><p>Use the <a href="https://docs.teslamate.org/">TeslaMate documentation</a> and the <a href="https://github.com/teslamate-org/teslamate">TeslaMate project</a> for installation, Docker, database, Grafana, MQTT publishing, and server updates.</p><h3>TeslaMateApi</h3><p>Use the <a href="https://github.com/tobiasehlert/teslamateapi">TeslaMateApi project</a> for API installation and endpoint problems.</p><h3>TestFlight</h3><p><a href="https://testflight.apple.com/join/pc7ywfgu">Join the Tesstats public beta</a> to install the app through TestFlight. See <a href="https://testflight.apple.com/">Apple TestFlight</a> for installation and beta update help.</p></section>
+        <section id="report"><h2>4. A useful issue report</h2><p>Include the Tesstats version, device model, operating system version, the screen involved, clear steps, expected result, and actual result. Add a screenshot only after removing personal data.</p><p>Say whether you use local MQTT TLS or secure WebSocket. Say whether TeslaMateApi is enabled. Replace server names and addresses with safe examples.</p><p><a href="https://github.com/jorgepb96/tesstats/issues/new">Open a Tesstats issue</a></p></section>
+      </article>
+    </div>
+  </main>
+
+  <footer class="site-footer legal-footer"><div class="footer-top"><a class="brand" href="index.html"><img src="assets/brand/logo.svg" alt="" width="112" height="34"><span>Tesstats</span></a><p>A private, read only TeslaMate companion for your Apple devices.</p><a class="back-top" href="#legal-content">Back to top ↑</a></div><div class="footer-bottom"><p>© <span data-year>2026</span> Tesstats contributors · <a href="https://github.com/jorgepb96/tesstats/blob/main/LICENSE">AGPL-3.0</a> · <a href="https://github.com/jorgepb96/tesstats">Source code</a><br>This project is an unofficial community tool and is not affiliated with, endorsed by, or supported by the official TeslaMate project. Not affiliated with Tesla, Inc.</p><p><a href="privacy.html">Privacy</a> · <a href="terms.html">Terms</a> · <a href="disclaimer.html">Disclaimer</a></p></div></footer>
+</body>
+</html>
