@@ -24,6 +24,9 @@ on:
         description: "Mark as prerelease"
         type: boolean
         default: true
+      xcode:
+        description: "Xcode version, e.g. 26.4 (default: newest installed)"
+        required: false
 
 permissions:
   contents: write
@@ -52,9 +55,16 @@ jobs:
             echo "Tag $TAG does not exist yet; it will be created on $(git rev-parse --short HEAD)."
           fi
 
-      - name: Select Xcode 26
+      - name: Select Xcode
+        env:
+          XCODE_VERSION: ${{ github.event.inputs.xcode }}
         run: |
-          XCODE=$(ls -d /Applications/Xcode_26*.app | sort -V | tail -1)
+          echo "Installed: $(ls -d /Applications/Xcode_*.app | xargs -n1 basename | tr '\n' ' ')"
+          if [ -n "$XCODE_VERSION" ]; then
+            XCODE="/Applications/Xcode_${XCODE_VERSION}.app"
+          else
+            XCODE=$(ls -d /Applications/Xcode_26*.app | sort -V | tail -1)
+          fi
           sudo xcode-select -s "$XCODE"
           xcodebuild -version
 
