@@ -80,6 +80,15 @@ Tesstats normally connects to those two and displays the data. Driver Copilot ca
 
 So to use Tesstats you need to (1) have TeslaMate running, and (2) let the app reach the **MQTT broker** (and ideally **TeslaMateApi**).
 
+### Two connection modes
+
+| Mode | What the app reaches | Live values | Best for |
+|---|---|---|---|
+| **API + MQTT** (recommended) | MQTT broker **and** TeslaMateApi | Pushed instantly by MQTT | Real‑time dashboard, Driver Display, charging Live Activity, alerts |
+| **API only** | TeslaMateApi only | Polled from TeslaMateApi's `/status` every 10–60 s while the app is open | The simplest setup: a single URL to expose |
+
+TeslaMateApi has no WebSocket or streaming endpoint, and its `/status` endpoint is itself fed by TeslaMate's MQTT broker (TeslaMateApi subscribes to it on the server; with `DISABLE_MQTT=true` live status is unavailable). **API only** therefore doesn't remove MQTT from your server — it only means the phone doesn't connect to it. Choose the mode in **Settings → Connection → Connection mode**. In API‑only mode you can skip exposing Mosquitto in [Step 2](#step-2--make-your-data-reachable-from-the-app) and only do [Step 3](#step-3--add-history-teslamateapi-recommended).
+
 ---
 
 ## What you need before you start
@@ -215,6 +224,8 @@ Open Tesstats → **Settings** (the gear). Here's what every field means:
 |---|---|
 | Address (IP or domain) | Your server's IP or domain. Informational/default host. |
 
+**Connection mode** — *API + MQTT (recommended)* or *API only* (see [Two connection modes](#two-connection-modes)). In API‑only mode, pick how often the live values refresh and skip the MQTT fields below.
+
 **MQTT (real‑time)**
 | Field | Option A (LAN/TLS) | Option B (reverse proxy) |
 |---|---|---|
@@ -227,11 +238,11 @@ Open Tesstats → **Settings** (the gear). Here's what every field means:
 
 **Reverse proxy Basic Auth** — turn on only for Option B if your proxy has a login.
 
-**History API** — TeslaMateApi base URL (see Step 3).
+**History API** — TeslaMateApi base URL (see Step 3). Required in API‑only mode.
 
 **Security & certificates** — *Trust a custom / self‑signed certificate* for Option A; *Allow unencrypted (LAN only)* only if your API is plain `http://` on your LAN.
 
-Tap **Test connection** to check both MQTT and the API, then **Save**. ✅
+Tap **Test connection** to check both MQTT and the API (in API‑only mode: the API and its live status endpoint), then **Save**. ✅
 
 > 🔐 Your passwords are stored in the device **Keychain**, never in plain files. You can also export an **encrypted, password‑protected backup** of your whole configuration to set up a second device quickly (Settings → Data).
 

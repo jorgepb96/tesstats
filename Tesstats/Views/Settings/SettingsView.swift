@@ -49,7 +49,10 @@ struct SettingsView: View {
                 switch section {
                 case .connection:
                     serverSection($settings)
-                    mqttSection($settings)
+                    liveSourceSection($settings)
+                    if !settings.config.usesAPIPolling {
+                        mqttSection($settings)
+                    }
                     apiSection($settings)
                     basicAuthSection($settings)
                     securitySection($settings)
@@ -236,6 +239,30 @@ struct SettingsView: View {
         }
     }
 
+    private func liveSourceSection(_ settings: Bindable<SettingsStore>) -> some View {
+        Section {
+            Picker(L("Live data"), selection: settings.config.liveSource) {
+                ForEach(LiveDataSource.allCases) { Text($0.label).tag($0) }
+            }
+            .accessibilityIdentifier("settings-live-source")
+            if settings.config.liveSource.wrappedValue == .api {
+                Picker(L("Refresh every"), selection: settings.config.apiPollingSeconds) {
+                    ForEach(ServerConfig.apiPollingChoices, id: \.self) { seconds in
+                        Text(String(format: L("%@ s"), String(seconds))).tag(seconds)
+                    }
+                }
+            }
+        } header: {
+            Text(L("Connection mode"))
+        } footer: {
+            if settings.config.liveSource.wrappedValue == .api {
+                Text(L("Simplest setup: only TeslaMateApi has to be reachable. Live values are refreshed periodically while the app is open, so speed, power and alerts lag behind. TeslaMateApi still needs its own MQTT connection to TeslaMate."))
+            } else {
+                Text(L("Recommended: MQTT pushes every change instantly (dashboard, driving view, Live Activity, alerts). TeslaMateApi adds trips, charges and battery history."))
+            }
+        }
+    }
+
     private func mqttSection(_ settings: Bindable<SettingsStore>) -> some View {
         Section {
             LabeledTextField(title: L("MQTT host (name only)"), text: settings.config.mqttHost,
@@ -287,9 +314,13 @@ struct SettingsView: View {
                              text: settings.config.apiBaseURL,
                              prompt: "https://teslamate.example.com/api", keyboard: .URL)
         } header: {
-            Text(L("History API (recommended)"))
+            Text(settings.config.liveSource.wrappedValue == .api ? L("TeslaMateApi (required)") : L("History API (recommended)"))
         } footer: {
-            Text(L("Optional but recommended. Here it IS a full URL — include https:// and the path (e.g. https://host/api). Provides drives, charges and battery history. Inherits Basic Auth."))
+            if settings.config.liveSource.wrappedValue == .api {
+                Text(L("Required in API-only mode. A full URL — include https:// and the path (e.g. https://host/api). Provides live status plus drives, charges and battery history. Inherits Basic Auth."))
+            } else {
+                Text(L("Optional but recommended. Here it IS a full URL — include https:// and the path (e.g. https://host/api). Provides drives, charges and battery history. Inherits Basic Auth."))
+            }
         }
     }
 
@@ -332,7 +363,9 @@ struct SettingsView: View {
             .disabled(testing)
 
             if let diagnostics {
-                DiagnosticsView(title: L("MQTT"), lines: diagnostics.mqtt)
+                if !diagnostics.mqtt.isEmpty {
+                    DiagnosticsView(title: L("MQTT"), lines: diagnostics.mqtt)
+                }
                 DiagnosticsView(title: L("History API"), lines: diagnostics.api)
             }
         } header: {
@@ -998,10 +1031,17 @@ struct SettingsView: View {
         testing = true
         diagnostics = nil
         Task {
-            let mqtt = await env.tester.testMQTT(config: env.settings.makeMQTTConfig(),
-                                                 topicRoot: env.settings.config.topicRoot)
-            let api = await env.tester.testAPI(config: env.settings.makeAPIConfig())
-            diagnostics = ConnectionDiagnostics(mqtt: mqtt, api: api, finished: true)
+            let apiConfig = env.settings.makeAPIConfig()
+            if env.settings.config.usesAPIPolling {
+                let api = await env.tester.testAPI(config: apiConfig)
+                let live = await env.tester.testLiveStatus(config: apiConfig)
+                diagnostics = ConnectionDiagnostics(mqtt: [], api: api + live, finished: true)
+            } else {
+                let mqtt = await env.tester.testMQTT(config: env.settings.makeMQTTConfig(),
+                                                     topicRoot: env.settings.config.topicRoot)
+                let api = await env.tester.testAPI(config: apiConfig)
+                diagnostics = ConnectionDiagnostics(mqtt: mqtt, api: api, finished: true)
+            }
             testing = false
         }
     }
