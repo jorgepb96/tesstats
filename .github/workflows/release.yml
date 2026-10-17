@@ -4,7 +4,8 @@ name: Release unsigned IPA
 # to a GitHub Release. Push a tag to publish it:
 #   git tag beta-build-38 && git push origin beta-build-38   → prerelease "Beta build 38"
 #   git tag v5.7.0 && git push origin v5.7.0                 → release "Tesstats 5.7.0"
-# or run it by hand from the Actions tab with an existing tag.
+# or run it by hand from the Actions tab: an existing tag is built as-is; a new tag is
+# created on the commit the workflow was dispatched from.
 
 on:
   push:
@@ -14,7 +15,7 @@ on:
   workflow_dispatch:
     inputs:
       tag:
-        description: "Existing tag to build and release"
+        description: "Tag to build and release (created on the dispatched commit if missing)"
         required: true
       name:
         description: "Release title (default: derived from the tag)"
@@ -38,10 +39,18 @@ jobs:
     env:
       TAG: ${{ github.event.inputs.tag || github.ref_name }}
     steps:
-      - name: Check out tag
+      - name: Check out
         uses: actions/checkout@v6
         with:
-          ref: ${{ env.TAG }}
+          fetch-depth: 0
+
+      - name: Use existing tag
+        run: |
+          if git rev-parse -q --verify "refs/tags/$TAG" >/dev/null; then
+            git checkout --detach "$TAG"
+          else
+            echo "Tag $TAG does not exist yet; it will be created on $(git rev-parse --short HEAD)."
+          fi
 
       - name: Select Xcode 26
         run: |
@@ -110,7 +119,8 @@ jobs:
             gh release upload "$TAG" build/Tesstats.ipa --clobber
           else
             gh release create "$TAG" build/Tesstats.ipa \
-              --title "$NAME" --notes-file build/notes.md --verify-tag "${FLAGS[@]}"
+              --target "$(git rev-parse HEAD)" \
+              --title "$NAME" --notes-file build/notes.md "${FLAGS[@]}"
           fi
 
       - name: Upload build log on failure
