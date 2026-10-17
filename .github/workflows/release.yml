@@ -88,7 +88,12 @@ jobs:
             CODE_SIGNING_REQUIRED=NO \
             CODE_SIGN_IDENTITY="" \
             clean archive | tee build/xcodebuild.log | grep -E "error:|\*\* ARCHIVE" || true
-          grep -q "\*\* ARCHIVE SUCCEEDED \*\*" build/xcodebuild.log || { tail -n 80 build/xcodebuild.log; exit 1; }
+          grep -q "\*\* ARCHIVE SUCCEEDED \*\*" build/xcodebuild.log || {
+            echo "::group::Failure summary"
+            grep -E "error:|\*\* ARCHIVE" build/xcodebuild.log | cut -c1-400 | sort -u | head -n 60
+            echo "::endgroup::"
+            exit 1
+          }
 
       - name: Package IPA
         run: |
