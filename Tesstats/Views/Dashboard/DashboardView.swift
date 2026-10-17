@@ -130,7 +130,9 @@ struct DashboardView: View {
         default:
             EmptyStateView(systemImage: "antenna.radiowaves.left.and.right",
                            title: L("Waiting for data"),
-                           message: L("Connected — waiting for the first MQTT messages from your car."))
+                           message: env.settings.config.usesAPIPolling
+                               ? L("Connected — waiting for TeslaMateApi to report your car.")
+                               : L("Connected — waiting for the first MQTT messages from your car."))
         }
     }
 

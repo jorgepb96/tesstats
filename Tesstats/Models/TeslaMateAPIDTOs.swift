@@ -333,3 +333,335 @@ struct UpdateDTO: Decodable {
                               endDate: endDate.flatMap(VehicleState.parseDate))
     }
 }
+
+// MARK: - Live status — /v1/cars/{id}/status (API-only live mode)
+
+/// TeslaMateApi answers some failures with HTTP 200 and `{"error": "…"}`.
+struct APIErrorBody: Decodable {
+    let error: String?
+}
+
+struct LiveStatusEnvelope: Decodable {
+    let data: LiveStatusDTO?
+}
+
+/// TeslaMateApi's in-memory copy of the car's MQTT topics. The server fills a Go struct, so a
+/// topic it has not received yet comes back as `0`, `false` or `""`; `apply(to:at:)` treats
+/// those zero values as "unknown" where a real reading can't be zero. Lengths, pressures and
+/// temperatures arrive in TeslaMate's display units and are normalized to km, bar and °C.
+struct LiveStatusDTO: Decodable {
+    let status: Status?
+    let units: Units?
+
+    struct Units: Decodable {
+        let unitOfLength: String?
+        let unitOfPressure: String?
+        let unitOfTemperature: String?
+
+        var lengthIsMiles: Bool { unitOfLength?.lowercased().hasPrefix("mi") == true }
+        var pressureIsPsi: Bool { unitOfPressure?.lowercased() == "psi" }
+        var temperatureIsFahrenheit: Bool { unitOfTemperature?.uppercased() == "F" }
+    }
+
+    struct Status: Decodable {
+        let displayName: String?
+        let state: String?
+        let stateSince: String?
+        let odometer: Double?
+        let carStatus: CarStatus?
+        let carDetails: CarDetails?
+        let carExterior: CarExterior?
+        let carGeodata: CarGeodata?
+        let carVersions: CarVersions?
+        let drivingDetails: DrivingDetails?
+        let climateDetails: ClimateDetails?
+        let batteryDetails: BatteryDetails?
+        let chargingDetails: ChargingDetails?
+        let tpmsDetails: TpmsDetails?
+    }
+
+    struct CarStatus: Decodable {
+        let healthy: Bool?
+        let locked: Bool?
+        let sentryMode: Bool?
+        let windowsOpen: Bool?
+        let doorsOpen: Bool?
+        let driverFrontDoorOpen: Bool?
+        let driverRearDoorOpen: Bool?
+        let passengerFrontDoorOpen: Bool?
+        let passengerRearDoorOpen: Bool?
+        let trunkOpen: Bool?
+        let frunkOpen: Bool?
+        let isUserPresent: Bool?
+        let centerDisplayState: Double?
+    }
+
+    struct CarDetails: Decodable {
+        let model: String?
+        let trimBadging: String?
+    }
+
+    struct CarExterior: Decodable {
+        let exteriorColor: String?
+        let spoilerType: String?
+        let wheelType: String?
+    }
+
+    struct Location: Decodable {
+        let latitude: Double?
+        let longitude: Double?
+    }
+
+    struct CarGeodata: Decodable {
+        let geofence: String?
+        let location: Location?
+        let latitude: Double?       // deprecated duplicate of location.latitude
+        let longitude: Double?
+    }
+
+    struct CarVersions: Decodable {
+        let version: String?
+        let updateAvailable: Bool?
+        let updateVersion: String?
+    }
+
+    struct ActiveRoute: Decodable {
+        let destination: String?
+        let energyAtArrival: Double?
+        let distanceToArrival: Double?
+        let minutesToArrival: Double?
+        let trafficMinutesDelay: Double?
+        let location: Location?
+    }
+
+    struct DrivingDetails: Decodable {
+        let activeRoute: ActiveRoute?
+        let shiftState: String?
+        let power: Double?          // kW
+        let speed: Double?
+        let heading: Double?
+        let elevation: Double?
+    }
+
+    struct ClimateDetails: Decodable {
+        let isClimateOn: Bool?
+        let insideTemp: Double?
+        let outsideTemp: Double?
+        let isPreconditioning: Bool?
+        let climateKeeperMode: String?
+    }
+
+    struct BatteryDetails: Decodable {
+        let estBatteryRange: Double?
+        let ratedBatteryRange: Double?
+        let idealBatteryRange: Double?
+        let batteryLevel: Double?
+        let usableBatteryLevel: Double?
+    }
+
+    struct ChargingDetails: Decodable {
+        let pluggedIn: Bool?
+        let chargingState: String?
+        let chargeEnergyAdded: Double?
+        let chargeLimitSoc: Double?
+        let chargePortDoorOpen: Bool?
+        let chargerActualCurrent: Double?
+        let chargerPhases: Double?
+        let chargerPower: Double?
+        let chargerVoltage: Double?
+        let chargeCurrentRequest: Double?
+        let chargeCurrentRequestMax: Double?
+        let scheduledChargingStartTime: String?
+        let timeToFullCharge: Double?
+    }
+
+    struct TpmsDetails: Decodable {
+        let tpmsPressureFl: Double?
+        let tpmsPressureFr: Double?
+        let tpmsPressureRl: Double?
+        let tpmsPressureRr: Double?
+        let tpmsSoftWarningFl: Bool?
+        let tpmsSoftWarningFr: Bool?
+        let tpmsSoftWarningRl: Bool?
+        let tpmsSoftWarningRr: Bool?
+    }
+
+    /// Overlay this snapshot on `state`, keeping earlier values for anything still unknown.
+    func apply(to state: inout VehicleState, at now: Date = Date()) {
+        guard let s = status else { return }
+        let u = units ?? Units(unitOfLength: nil, unitOfPressure: nil, unitOfTemperature: nil)
+        let km: (Double) -> Double = { u.lengthIsMiles ? $0 * 1.609344 : $0 }
+        let bar: (Double) -> Double = { u.pressureIsPsi ? $0 / 14.503773800722 : $0 }
+        let celsius: (Double) -> Double = { u.temperatureIsFahrenheit ? ($0 - 32) * 5 / 9 : $0 }
+        state.lastUpdated = now
+
+        // Status / identity
+        if let v = Self.text(s.state) { state.state = CarState(raw: v) }
+        if let v = Self.date(s.stateSince) { state.since = v }
+        if let v = Self.text(s.displayName) { state.displayName = v }
+        if let v = Self.positive(s.odometer) { state.odometer = km(v) }
+        if let v = s.carStatus?.healthy { state.healthy = v }
+        if let v = s.carVersions {
+            if let version = Self.text(v.version) { state.version = version }
+            if let available = v.updateAvailable { state.updateAvailable = available }
+            state.updateVersion = Self.text(v.updateVersion)
+        }
+        if let v = Self.text(s.carDetails?.model) { state.model = v }
+        if let v = Self.text(s.carDetails?.trimBadging) { state.trimBadging = v }
+        if let v = Self.text(s.carExterior?.exteriorColor) { state.exteriorColor = v }
+        if let v = Self.text(s.carExterior?.wheelType) { state.wheelType = v }
+        if let v = Self.text(s.carExterior?.spoilerType) { state.spoilerType = v }
+
+        // Battery: an all-zero block means TeslaMate has not reported it yet.
+        if let b = s.batteryDetails,
+           [b.batteryLevel, b.usableBatteryLevel, b.ratedBatteryRange, b.estBatteryRange, b.idealBatteryRange]
+               .contains(where: { ($0 ?? 0) > 0 }) {
+            if let v = Self.int(b.batteryLevel) { state.batteryLevel = v }
+            if let v = Self.int(b.usableBatteryLevel) { state.usableBatteryLevel = v }
+            if let v = Self.finite(b.ratedBatteryRange) { state.ratedBatteryRangeKm = km(v) }
+            if let v = Self.finite(b.estBatteryRange) { state.estBatteryRangeKm = km(v) }
+            if let v = Self.finite(b.idealBatteryRange) { state.idealBatteryRangeKm = km(v) }
+        }
+
+        // Charging
+        if let c = s.chargingDetails {
+            if let v = c.pluggedIn { state.pluggedIn = v }
+            if let v = Self.text(c.chargingState) { state.chargingState = ChargingState(raw: v) }
+            if let v = Self.finite(c.chargeEnergyAdded) { state.chargeEnergyAdded = v }
+            if let v = Self.int(c.chargeLimitSoc), v > 0 { state.chargeLimitSoc = v }
+            if let v = c.chargePortDoorOpen { state.chargePortDoorOpen = v }
+            if let v = Self.finite(c.chargerPower) { state.chargerPower = v }
+            if let v = Self.int(c.chargerVoltage) { state.chargerVoltage = v }
+            if let v = Self.int(c.chargerActualCurrent) { state.chargerActualCurrent = v }
+            if let v = Self.int(c.chargerPhases) { state.chargerPhases = v }
+            if let v = Self.int(c.chargeCurrentRequest) { state.chargeCurrentRequest = v }
+            if let v = Self.int(c.chargeCurrentRequestMax) { state.chargeCurrentRequestMax = v }
+            state.scheduledChargingStartTime = Self.date(c.scheduledChargingStartTime)
+            if let v = Self.finite(c.timeToFullCharge) { state.timeToFullCharge = v }
+        }
+
+        // Climate
+        if let c = s.climateDetails {
+            if let v = c.isClimateOn { state.isClimateOn = v }
+            if let v = Self.finite(c.insideTemp) { state.insideTemp = celsius(v) }
+            if let v = Self.finite(c.outsideTemp) { state.outsideTemp = celsius(v) }
+            if let v = c.isPreconditioning { state.isPreconditioning = v }
+            if let v = Self.text(c.climateKeeperMode) { state.climateKeeperMode = v }
+        }
+
+        // Position
+        let location = s.carGeodata?.location
+        let latitude = Self.finite(location?.latitude ?? s.carGeodata?.latitude)
+        let longitude = Self.finite(location?.longitude ?? s.carGeodata?.longitude)
+        let hasLocation = latitude != nil && longitude != nil && (latitude != 0 || longitude != 0)
+        if hasLocation {
+            state.latitude = latitude
+            state.longitude = longitude
+        }
+        if let geodata = s.carGeodata { state.geofence = Self.text(geodata.geofence) }
+
+        // Driving
+        if let d = s.drivingDetails {
+            if let v = Self.text(d.shiftState) { state.shiftState = ShiftState(raw: v) }
+            if let v = Self.finite(d.power) { state.power = v }
+            if let v = Self.finite(d.speed) {
+                // `/status` reports 0 instead of "no speed" while parked; MQTT sends nothing.
+                state.speed = (v == 0 && !state.isDriving) ? nil : km(v)
+            }
+            if hasLocation {
+                if let v = Self.int(d.heading) { state.heading = v }
+                if let v = Self.int(d.elevation) { state.elevation = v }
+            }
+            applyActiveRoute(d.activeRoute, to: &state, lengthIsMiles: u.lengthIsMiles, at: now)
+        }
+
+        // Security / openings
+        if let c = s.carStatus {
+            if let v = c.locked { state.locked = v }
+            if let v = c.sentryMode { state.sentryMode = v }
+            if let v = Self.int(c.centerDisplayState) { state.centerDisplayState = v }
+            if let v = c.windowsOpen { state.windowsOpen = v }
+            if let v = c.doorsOpen { state.doorsOpen = v }
+            if let v = c.frunkOpen { state.frunkOpen = v }
+            if let v = c.trunkOpen { state.trunkOpen = v }
+            if let v = c.isUserPresent { state.isUserPresent = v }
+            if let v = c.driverFrontDoorOpen { state.driverFrontDoorOpen = v }
+            if let v = c.driverRearDoorOpen { state.driverRearDoorOpen = v }
+            if let v = c.passengerFrontDoorOpen { state.passengerFrontDoorOpen = v }
+            if let v = c.passengerRearDoorOpen { state.passengerRearDoorOpen = v }
+        }
+
+        // TPMS: 0 bar is "no reading", never a real tire pressure.
+        if let t = s.tpmsDetails {
+            if let v = Self.positive(t.tpmsPressureFl) { state.tpmsPressureFL = bar(v) }
+            if let v = Self.positive(t.tpmsPressureFr) { state.tpmsPressureFR = bar(v) }
+            if let v = Self.positive(t.tpmsPressureRl) { state.tpmsPressureRL = bar(v) }
+            if let v = Self.positive(t.tpmsPressureRr) { state.tpmsPressureRR = bar(v) }
+            if let v = t.tpmsSoftWarningFl { state.tpmsSoftWarningFL = v }
+            if let v = t.tpmsSoftWarningFr { state.tpmsSoftWarningFR = v }
+            if let v = t.tpmsSoftWarningRl { state.tpmsSoftWarningRL = v }
+            if let v = t.tpmsSoftWarningRr { state.tpmsSoftWarningRR = v }
+        }
+    }
+
+    /// TeslaMateApi converts the MQTT `miles_to_arrival` to km, and back to miles only when
+    /// TeslaMate displays miles. The app stores miles, like the MQTT topic.
+    private func applyActiveRoute(_ route: ActiveRoute?, to state: inout VehicleState,
+                                  lengthIsMiles: Bool, at now: Date) {
+        guard let route else { return }
+        guard let destination = Self.text(route.destination) else {
+            let hadRoute = state.activeRouteDestination != nil
+            state.activeRouteDestination = nil
+            state.activeRouteLatitude = nil
+            state.activeRouteLongitude = nil
+            state.activeRouteTrafficMinutesDelay = nil
+            state.activeRouteEnergyAtArrival = nil
+            state.activeRouteMilesToArrival = nil
+            state.activeRouteMinutesToArrival = nil
+            if hadRoute { state.activeRouteUpdatedAt = now }
+            return
+        }
+        state.activeRouteError = nil
+        state.activeRouteDestination = destination
+        if let lat = Self.finite(route.location?.latitude), let lon = Self.finite(route.location?.longitude),
+           lat != 0 || lon != 0 {
+            state.activeRouteLatitude = lat
+            state.activeRouteLongitude = lon
+        }
+        state.activeRouteTrafficMinutesDelay = Self.finite(route.trafficMinutesDelay)
+        state.activeRouteEnergyAtArrival = Self.int(route.energyAtArrival)
+        state.activeRouteMilesToArrival = Self.finite(route.distanceToArrival)
+            .map { lengthIsMiles ? $0 : $0 / 1.609344 }
+        state.activeRouteMinutesToArrival = Self.finite(route.minutesToArrival)
+        state.activeRouteUpdatedAt = now
+    }
+
+    // MARK: Zero-value helpers
+
+    private static func text(_ value: String?) -> String? {
+        guard let value, !value.isEmpty else { return nil }
+        return value
+    }
+
+    private static func finite(_ value: Double?) -> Double? {
+        guard let value, value.isFinite else { return nil }
+        return value
+    }
+
+    private static func positive(_ value: Double?) -> Double? {
+        guard let value = finite(value), value > 0 else { return nil }
+        return value
+    }
+
+    private static func int(_ value: Double?) -> Int? {
+        guard let value = finite(value), abs(value) < 1e9 else { return nil }
+        return Int(value.rounded())
+    }
+
+    /// Go formats an unset timestamp as year 1 (`0001-01-01T…`); anything that old is unknown.
+    private static func date(_ value: String?) -> Date? {
+        guard let value = text(value), let date = VehicleState.parseDate(value),
+              date.timeIntervalSince1970 > 946_684_800 else { return nil }
+        return date
+    }
+}

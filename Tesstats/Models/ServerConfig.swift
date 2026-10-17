@@ -17,6 +17,12 @@ struct ServerConfig: Codable, Equatable, Sendable {
     // MARK: Server addressing (IP or domain / reverse proxy)
     var serverHost: String = ""          // informational base host (domain or IP)
 
+    // MARK: Live data source
+    /// MQTT (real-time push, recommended) or polling TeslaMateApi's `/status` endpoint.
+    var liveSource: LiveDataSource = .mqtt
+    /// Seconds between `/status` requests in API-only mode.
+    var apiPollingSeconds: Int = 15
+
     // MARK: MQTT
     var mqttHost: String = ""
     var mqttPort: Int = 8883
@@ -104,6 +110,13 @@ struct ServerConfig: Codable, Equatable, Sendable {
 
     var hasMQTTConfigured: Bool { !mqttHost.isEmpty }
     var hasAPIConfigured: Bool { !normalizedAPIBaseURL.isEmpty }
+    var usesAPIPolling: Bool { liveSource == .api }
+    /// True when the selected live source has what it needs to connect.
+    var hasLiveSourceConfigured: Bool { usesAPIPolling ? hasAPIConfigured : hasMQTTConfigured }
+
+    static let apiPollingChoices = [10, 15, 30, 60]
+    /// Polling interval clamped to a sane range, whatever a restored backup contains.
+    var effectiveAPIPollingSeconds: Int { min(300, max(5, apiPollingSeconds)) }
 
     /// Topic root, honoring an optional namespace prefix.
     var topicRoot: String {
@@ -237,6 +250,8 @@ extension ServerConfig {
         let c = try decoder.container(keyedBy: CodingKeys.self)
         self.init()
         serverHost = c.lenient(.serverHost, serverHost)
+        liveSource = c.lenient(.liveSource, liveSource)
+        apiPollingSeconds = c.lenient(.apiPollingSeconds, apiPollingSeconds)
         mqttHost = c.lenient(.mqttHost, mqttHost)
         mqttPort = c.lenient(.mqttPort, mqttPort)
         mqttTransport = c.lenient(.mqttTransport, mqttTransport)

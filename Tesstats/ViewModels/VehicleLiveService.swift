@@ -1,8 +1,8 @@
 import Foundation
 
-/// Orchestrates the live data path: chooses Demo or real MQTT, applies updates to the
-/// observable state map, drives notifications on transitions, caches snapshots offline,
-/// and reconnects with backoff. All observable mutation stays on the MainActor.
+/// Orchestrates the live data path: chooses Demo, real MQTT or TeslaMateApi polling, applies
+/// updates to the observable state map, drives notifications on transitions, caches snapshots
+/// offline, and reconnects with backoff. All observable mutation stays on the MainActor.
 @MainActor
 @Observable
 final class VehicleLiveService {
@@ -89,7 +89,9 @@ final class VehicleLiveService {
         let config = settings.config
         if config.demoMode {
             startDemo()
-        } else if config.hasMQTTConfigured {
+        } else if config.usesAPIPolling, config.hasAPIConfigured {
+            startPolling()
+        } else if !config.usesAPIPolling, config.hasMQTTConfigured {
             startLive()
         } else {
             status = .notConfigured
@@ -108,8 +110,8 @@ final class VehicleLiveService {
     }
 
     /// Called when the Watch companion becomes active. It immediately re-sends the assembled
-    /// state and reconnects a stale/suspended MQTT session so retained TeslaMate topics can
-    /// repopulate the Watch without requiring the iPhone UI to be opened first.
+    /// state and reconnects a stale/suspended MQTT session (or polls the API again) so the
+    /// Watch repopulates without requiring the iPhone UI to be opened first.
     func refreshForWatch() {
         guard settings.isConfigured else { return }
         if let current = currentState {
@@ -119,9 +121,9 @@ final class VehicleLiveService {
                                 cache: cache,
                                 force: true)
         }
-        guard !settings.config.demoMode, settings.config.hasMQTTConfigured else { return }
+        guard !settings.config.demoMode, settings.config.hasLiveSourceConfigured else { return }
         let age = currentState.map { Date().timeIntervalSince($0.lastUpdated) } ?? .infinity
-        if status != .connected || age > 15 {
+        if !status.isLive || age > 15 {
             restart()
         }
     }
@@ -190,6 +192,83 @@ final class VehicleLiveService {
         }
     }
 
+    // MARK: - API polling (no MQTT)
+
+    /// Live values without MQTT: poll TeslaMateApi's `/status` for every car. The values lag
+    /// by up to one interval, so this is the simple setup, not the recommended one.
+    private func startPolling() {
+        connectionEpoch &+= 1
+        let epoch = connectionEpoch
+        consumeTask?.cancel(); consumeTask = nil
+        reconnectTask?.cancel(); reconnectTask = nil
+        if let old = client { client = nil; Task { await old.disconnect() } }
+
+        status = .connecting
+        let api = HistoryAPIService(config: settings.makeAPIConfig())
+        let interval = Double(settings.config.effectiveAPIPollingSeconds)
+        consumeTask = Task { @MainActor [weak self] in
+            var failures = 0
+            var carIDs: [Int] = []
+            while !Task.isCancelled {
+                switch await self?.pollOnce(api: api, carIDs: carIDs, epoch: epoch) ?? .stop {
+                case .stop: return
+                case .failed: failures += 1
+                case .polled(let ids): carIDs = ids; failures = 0
+                }
+                // Back off on errors (2×, 4×… the interval, at most 2 minutes).
+                let delay = failures == 0 ? interval : min(120, interval * pow(2, Double(min(failures, 4))))
+                do { try await Task.sleep(for: .seconds(delay)) } catch { return }
+            }
+        }
+    }
+
+    private enum PollOutcome { case stop, failed, polled([Int]) }
+
+    /// One polling round over `carIDs` (discovered first when empty). `.stop` means this
+    /// polling loop was superseded or stopped.
+    private func pollOnce(api: HistoryAPIService, carIDs: [Int], epoch: Int) async -> PollOutcome {
+        guard epoch == connectionEpoch, !intentionalStop else { return .stop }
+        do {
+            var ids = carIDs
+            if ids.isEmpty {
+                let found = try await api.fetchCars()
+                guard epoch == connectionEpoch, !intentionalStop else { return .stop }
+                for car in found {
+                    if let idx = cars.firstIndex(where: { $0.id == car.id }) {
+                        cars[idx].displayName = car.displayName
+                        if let model = car.model { cars[idx].model = model }
+                    } else {
+                        cars.append(car)
+                    }
+                }
+                cars.sort { $0.id < $1.id }
+                if settings.config.selectedCarID == nil { settings.config.selectedCarID = found.first?.id }
+                ids = found.map(\.id)
+            }
+            for id in ids {
+                let snapshot = try await api.fetchLiveStatus(carID: id)
+                guard epoch == connectionEpoch, !intentionalStop else { return .stop }
+                if let snapshot { commitPolled(snapshot, carID: id) }
+            }
+            status = .polling
+            lastError = nil
+            return .polled(ids)
+        } catch {
+            guard epoch == connectionEpoch, !intentionalStop, !Task.isCancelled else { return .stop }
+            let message = (error as? APIError)?.errorDescription ?? error.localizedDescription
+            lastError = message
+            status = .failed(message)
+            return .failed
+        }
+    }
+
+    private func commitPolled(_ snapshot: LiveStatusDTO, carID: Int) {
+        let previous = states[carID]
+        var current = previous ?? VehicleState(carID: carID)
+        snapshot.apply(to: &current)
+        commitFull(current, previous: previous)
+    }
+
     private func handle(topic: String, payload: String, topicRoot: String) {
         let prefix = topicRoot + "/"
         guard topic.hasPrefix(prefix) else { return }
@@ -207,7 +286,8 @@ final class VehicleLiveService {
     }
 
     private func scheduleReconnect() {
-        guard !intentionalStop, !settings.config.demoMode, settings.config.hasMQTTConfigured else { return }
+        guard !intentionalStop, !settings.config.demoMode, !settings.config.usesAPIPolling,
+              settings.config.hasMQTTConfigured else { return }
         reconnectTask?.cancel()
         reconnectAttempt += 1
         let delay = min(30.0, pow(2.0, Double(min(reconnectAttempt, 5))))
@@ -244,7 +324,10 @@ final class VehicleLiveService {
     }
 
     private func commitFull(_ snapshot: VehicleState) {
-        let previous = states[snapshot.carID]
+        commitFull(snapshot, previous: states[snapshot.carID])
+    }
+
+    private func commitFull(_ snapshot: VehicleState, previous: VehicleState?) {
         states[snapshot.carID] = snapshot
         powerSampleDates[snapshot.carID] = snapshot.power == nil ? nil : snapshot.lastUpdated
         speedSampleDates[snapshot.carID] = snapshot.speed == nil ? nil : snapshot.lastUpdated

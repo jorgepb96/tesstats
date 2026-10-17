@@ -14515,6 +14515,310 @@
           }
         }
       }
+    },
+    "Live (API)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Live (API)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "En vivo (API)"
+          }
+        }
+      }
+    },
+    "API + MQTT (recommended)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "API + MQTT (recommended)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "API + MQTT (recomendado)"
+          }
+        }
+      }
+    },
+    "API only" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "API only"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Solo API"
+          }
+        }
+      }
+    },
+    "Live data" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Live data"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Datos en vivo"
+          }
+        }
+      }
+    },
+    "Refresh every" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Refresh every"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Actualizar cada"
+          }
+        }
+      }
+    },
+    "%@ s" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ s"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ s"
+          }
+        }
+      }
+    },
+    "Connection mode" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Connection mode"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Modo de conexión"
+          }
+        }
+      }
+    },
+    "Simplest setup: only TeslaMateApi has to be reachable. Live values are refreshed periodically while the app is open, so speed, power and alerts lag behind. TeslaMateApi still needs its own MQTT connection to TeslaMate." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Simplest setup: only TeslaMateApi has to be reachable. Live values are refreshed periodically while the app is open, so speed, power and alerts lag behind. TeslaMateApi still needs its own MQTT connection to TeslaMate."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La configuración más sencilla: solo hace falta poder acceder a TeslaMateApi. Los datos en vivo se actualizan periódicamente mientras la app está abierta, así que la velocidad, la potencia y los avisos llegan con retraso. TeslaMateApi sigue necesitando su propia conexión MQTT con TeslaMate."
+          }
+        }
+      }
+    },
+    "Recommended: MQTT pushes every change instantly (dashboard, driving view, Live Activity, alerts). TeslaMateApi adds trips, charges and battery history." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Recommended: MQTT pushes every change instantly (dashboard, driving view, Live Activity, alerts). TeslaMateApi adds trips, charges and battery history."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Recomendado: MQTT envía cada cambio al instante (panel, vista de conducción, Live Activity, avisos). TeslaMateApi añade viajes, cargas e historial de batería."
+          }
+        }
+      }
+    },
+    "TeslaMateApi (required)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "TeslaMateApi (required)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "TeslaMateApi (obligatorio)"
+          }
+        }
+      }
+    },
+    "Required in API-only mode. A full URL — include https:// and the path (e.g. https://host/api). Provides live status plus drives, charges and battery history. Inherits Basic Auth." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Required in API-only mode. A full URL — include https:// and the path (e.g. https://host/api). Provides live status plus drives, charges and battery history. Inherits Basic Auth."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Obligatorio en el modo solo API. Es una URL completa: incluye https:// y la ruta (p. ej. https://host/api). Proporciona el estado en vivo además de viajes, cargas e historial de batería. Hereda la Basic Auth."
+          }
+        }
+      }
+    },
+    "Connected — waiting for TeslaMateApi to report your car." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Connected — waiting for TeslaMateApi to report your car."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Conectado — esperando a que TeslaMateApi informe de tu coche."
+          }
+        }
+      }
+    },
+    "TeslaMateApi has no live status endpoint at this URL. Check the base URL or update TeslaMateApi." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "TeslaMateApi has no live status endpoint at this URL. Check the base URL or update TeslaMateApi."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "TeslaMateApi no tiene el endpoint de estado en vivo en esta URL. Revisa la URL base o actualiza TeslaMateApi."
+          }
+        }
+      }
+    },
+    "TeslaMateApi runs with MQTT disabled (DISABLE_MQTT=true), so it cannot provide live status." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "TeslaMateApi runs with MQTT disabled (DISABLE_MQTT=true), so it cannot provide live status."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "TeslaMateApi se ejecuta con MQTT desactivado (DISABLE_MQTT=true), así que no puede dar el estado en vivo."
+          }
+        }
+      }
+    },
+    "TeslaMateApi is not connected to its MQTT broker, so it cannot provide live status." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "TeslaMateApi is not connected to its MQTT broker, so it cannot provide live status."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "TeslaMateApi no está conectado a su broker MQTT, así que no puede dar el estado en vivo."
+          }
+        }
+      }
+    },
+    "API-only mode needs the TeslaMateApi URL." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "API-only mode needs the TeslaMateApi URL."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El modo solo API necesita la URL de TeslaMateApi."
+          }
+        }
+      }
+    },
+    "TeslaMateApi returned no cars, so there is no live status to read." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "TeslaMateApi returned no cars, so there is no live status to read."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "TeslaMateApi no ha devuelto ningún coche, así que no hay estado en vivo que leer."
+          }
+        }
+      }
+    },
+    "Live status reachable, but TeslaMateApi has no data for this car yet. Check its MQTT settings (MQTT_HOST)." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Live status reachable, but TeslaMateApi has no data for this car yet. Check its MQTT settings (MQTT_HOST)."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El estado en vivo responde, pero TeslaMateApi aún no tiene datos de este coche. Revisa su configuración MQTT (MQTT_HOST)."
+          }
+        }
+      }
+    },
+    "Live status OK: %@ · %@ · battery %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Live status OK: %@ · %@ · battery %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Estado en vivo OK: %@ · %@ · batería %@"
+          }
+        }
+      }
     }
   },
   "version" : "1.0"

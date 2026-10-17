@@ -43,7 +43,7 @@ enum WidgetBridge {
                 return copy
             }()
             let staleDate = activity.content.staleDate
-            Task { await activity.update(ActivityContent(state: updatedState, staleDate: staleDate)) }
+            update(activity, to: ActivityContent(state: updatedState, staleDate: staleDate))
             reregister(activity)
         }
         #endif
@@ -69,7 +69,7 @@ enum WidgetBridge {
             updatedState.accentColorHex = hex
             let state = updatedState
             let staleDate = activity.content.staleDate
-            Task { await activity.update(ActivityContent(state: state, staleDate: staleDate)) }
+            update(activity, to: ActivityContent(state: state, staleDate: staleDate))
             reregister(activity)
         }
         #endif
@@ -227,7 +227,7 @@ enum WidgetBridge {
     static func stopLiveActivities() {
         #if os(iOS)
         for activity in Activity<ChargingActivityAttributes>.activities {
-            Task { await activity.end(nil, dismissalPolicy: .immediate) }
+            end(activity, content: nil, dismissalPolicy: .immediate)
         }
         #endif
     }
@@ -268,7 +268,7 @@ enum WidgetBridge {
                 let now = Date()
                 guard now.timeIntervalSince(lastActivityUpdate) >= 5 else { return }
                 lastActivityUpdate = now
-                Task { await existing.update(ActivityContent(state: content, staleDate: nil)) }
+                update(existing, to: ActivityContent(state: content, staleDate: nil))
             } else {
                 lastActivityUpdate = Date()
                 do {
@@ -283,10 +283,8 @@ enum WidgetBridge {
             }
         } else if let existing {
             // Charging ended — show the final state briefly, then dismiss.
-            Task {
-                await existing.end(ActivityContent(state: content, staleDate: nil),
-                                   dismissalPolicy: .after(Date().addingTimeInterval(8)))
-            }
+            end(existing, content: ActivityContent(state: content, staleDate: nil),
+                dismissalPolicy: .after(Date().addingTimeInterval(8)))
         }
     }
 
@@ -303,6 +301,24 @@ enum WidgetBridge {
             observedActivityIDs.remove(id)
             activityPushTokens.removeValue(forKey: id)
         }
+    }
+
+    /// `Activity` is not `Sendable` in the iOS 26.5 SDK, so calling its nonisolated `update`/`end`
+    /// from this main-actor type is rejected as a data race. ActivityKit allows those calls from
+    /// any context; hand them to a detached task instead.
+    private struct UncheckedSendable<Value>: @unchecked Sendable { let value: Value }
+
+    private static func update(_ activity: Activity<ChargingActivityAttributes>,
+                               to content: ActivityContent<ChargingActivityAttributes.ContentState>) {
+        let box = UncheckedSendable(value: (activity, content))
+        Task.detached { await box.value.0.update(box.value.1) }
+    }
+
+    private static func end(_ activity: Activity<ChargingActivityAttributes>,
+                            content: ActivityContent<ChargingActivityAttributes.ContentState>?,
+                            dismissalPolicy: ActivityUIDismissalPolicy) {
+        let box = UncheckedSendable(value: (activity, content, dismissalPolicy))
+        Task.detached { await box.value.0.end(box.value.1, dismissalPolicy: box.value.2) }
     }
 
     private static func reregister(_ activity: Activity<ChargingActivityAttributes>) {

@@ -49,7 +49,7 @@ enum CarState: String, Sendable, CaseIterable, Codable {
 
 // MARK: - Charging (`charging_state` topic)
 
-enum ChargingState: String, Sendable, Codable {
+enum ChargingState: String, Sendable, Codable, CaseIterable {
     case charging = "Charging"
     case complete = "Complete"
     case stopped = "Stopped"
@@ -58,8 +58,9 @@ enum ChargingState: String, Sendable, Codable {
     case starting = "Starting"
     case unknown
 
+    /// Case-insensitive: MQTT publishes `Charging`, TeslaMateApi's `/status` lowercases it.
     init(raw: String) {
-        self = ChargingState(rawValue: raw) ?? .unknown
+        self = Self.allCases.first { $0.rawValue.caseInsensitiveCompare(raw) == .orderedSame } ?? .unknown
     }
 
     var label: String {
@@ -108,6 +109,8 @@ enum ConnectionStatus: Equatable, Sendable {
     case connecting
     case connected
     case demo
+    /// API-only mode: live values arrive by polling TeslaMateApi, so they lag by up to one interval.
+    case polling
     case failed(String)
 
     var label: String {
@@ -117,13 +120,14 @@ enum ConnectionStatus: Equatable, Sendable {
         case .connecting: L("Connecting…")
         case .connected: L("Live")
         case .demo: L("Demo")
+        case .polling: L("Live (API)")
         case .failed: L("Connection error")
         }
     }
 
     var color: Color {
         switch self {
-        case .connected: Brand.online
+        case .connected, .polling: Brand.online
         case .connecting: Brand.warning
         case .demo: Brand.driving
         case .failed: Brand.danger
@@ -131,10 +135,25 @@ enum ConnectionStatus: Equatable, Sendable {
         }
     }
 
-    var isLive: Bool { self == .connected }
+    var isLive: Bool { self == .connected || self == .polling }
 }
 
 // MARK: - Preferences
+
+/// Where live vehicle values come from. MQTT pushes every change as it happens; API-only
+/// polls TeslaMateApi's `/status` (itself fed by MQTT on the server), so only one URL has to
+/// be exposed, at the cost of delayed values.
+enum LiveDataSource: String, Codable, Sendable, CaseIterable, Identifiable {
+    case mqtt
+    case api
+    var id: String { rawValue }
+    var label: String {
+        switch self {
+        case .mqtt: L("API + MQTT (recommended)")
+        case .api: L("API only")
+        }
+    }
+}
 
 enum MQTTTransport: String, Codable, Sendable, CaseIterable, Identifiable {
     case tls          // mqtts, typically 8883

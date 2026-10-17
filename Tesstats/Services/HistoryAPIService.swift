@@ -93,21 +93,28 @@ final class HistoryAPIService: Sendable {
         return req
     }
 
-    private func fetch<T: Decodable>(_ type: T.Type, path: String) async throws -> T {
+    /// Performs the request and returns the body with its HTTP status (200 if not HTTP).
+    private func send(path: String) async throws -> (Data, Int) {
         let req = try request(path: path)
-        let (data, response): (Data, URLResponse)
         do {
-            (data, response) = try await session.data(for: req)
+            let (data, response) = try await session.data(for: req)
+            return (data, (response as? HTTPURLResponse)?.statusCode ?? 200)
         } catch {
             throw APIError.underlying(error.localizedDescription)
         }
-        if let http = response as? HTTPURLResponse {
-            switch http.statusCode {
-            case 200...299: break
-            case 401, 403: throw APIError.unauthorized
-            default: throw APIError.http(http.statusCode)
-            }
+    }
+
+    private func fetch<T: Decodable>(_ type: T.Type, path: String) async throws -> T {
+        let (data, status) = try await send(path: path)
+        switch status {
+        case 200...299: break
+        case 401, 403: throw APIError.unauthorized
+        default: throw APIError.http(status)
         }
+        return try decode(T.self, from: data)
+    }
+
+    private func decode<T: Decodable>(_ type: T.Type, from data: Data) throws -> T {
         do {
             return try decoder.decode(T.self, from: data)
         } catch {
@@ -125,6 +132,30 @@ final class HistoryAPIService: Sendable {
     func fetchCarInfo(carID: Int) async throws -> CarInfo? {
         let env = try await fetch(CarsEnvelope.self, path: "/v1/cars")
         return (env.data?.cars ?? []).compactMap { $0.toInfo() }.first { $0.id == carID }
+    }
+
+    /// Live snapshot from `/status`, which TeslaMateApi serves from its own MQTT subscription.
+    /// Returns nil while TeslaMateApi has not received any topic for this car yet.
+    func fetchLiveStatus(carID: Int) async throws -> LiveStatusDTO? {
+        let (data, status) = try await send(path: "/v1/cars/\(carID)/status")
+        let serverError = (try? JSONDecoder().decode(APIErrorBody.self, from: data))?.error
+        switch status {
+        case 200...299: break
+        case 401, 403: throw APIError.unauthorized
+        case 404: throw APIError.underlying(L("TeslaMateApi has no live status endpoint at this URL. Check the base URL or update TeslaMateApi."))
+        case 501: throw APIError.underlying(L("TeslaMateApi runs with MQTT disabled (DISABLE_MQTT=true), so it cannot provide live status."))
+        default:
+            if serverError?.localizedCaseInsensitiveContains("mqtt") == true {
+                throw APIError.underlying(L("TeslaMateApi is not connected to its MQTT broker, so it cannot provide live status."))
+            }
+            throw APIError.http(status)
+        }
+        if let serverError {
+            // HTTP 200 + error: "no info on this car ID" just means no topic has arrived yet.
+            if serverError.localizedCaseInsensitiveContains("no info") { return nil }
+            throw APIError.underlying(serverError)
+        }
+        return try decode(LiveStatusEnvelope.self, from: data).data
     }
 
     private let pageLimit = 100   // TeslaMateApi returns up to 100 rows per page
