@@ -1,0 +1,122 @@
+name: Release unsigned IPA
+
+# Builds an unsigned Tesstats.ipa (for AltStore / SideStore / re-signing) and attaches it
+# to a GitHub Release. Push a tag to publish it:
+#   git tag beta-build-38 && git push origin beta-build-38   → prerelease "Beta build 38"
+#   git tag v5.7.0 && git push origin v5.7.0                 → release "Tesstats 5.7.0"
+# or run it by hand from the Actions tab with an existing tag.
+
+on:
+  push:
+    tags:
+      - "v*"
+      - "beta-build-*"
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Existing tag to build and release"
+        required: true
+      name:
+        description: "Release title (default: derived from the tag)"
+        required: false
+      prerelease:
+        description: "Mark as prerelease"
+        type: boolean
+        default: true
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-${{ github.event.inputs.tag || github.ref_name }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: macos-26
+    timeout-minutes: 60
+    env:
+      TAG: ${{ github.event.inputs.tag || github.ref_name }}
+    steps:
+      - name: Check out tag
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ env.TAG }}
+
+      - name: Select Xcode 26
+        run: |
+          XCODE=$(ls -d /Applications/Xcode_26*.app | sort -V | tail -1)
+          sudo xcode-select -s "$XCODE"
+          xcodebuild -version
+
+      - name: Install XcodeGen
+        run: brew install xcodegen
+
+      - name: Generate Xcode project
+        run: xcodegen generate
+
+      - name: Archive (unsigned)
+        run: |
+          set -o pipefail
+          mkdir -p build
+          xcodebuild \
+            -project Tesstats.xcodeproj \
+            -scheme Tesstats \
+            -configuration Release \
+            -destination 'generic/platform=iOS' \
+            -archivePath "$PWD/build/Tesstats.xcarchive" \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGN_IDENTITY="" \
+            clean archive | tee build/xcodebuild.log | grep -E "error:|\*\* ARCHIVE" || true
+          grep -q "\*\* ARCHIVE SUCCEEDED \*\*" build/xcodebuild.log || { tail -n 80 build/xcodebuild.log; exit 1; }
+
+      - name: Package IPA
+        run: |
+          APP="build/Tesstats.xcarchive/Products/Applications/Tesstats.app"
+          test -d "$APP"
+          mkdir -p build/ipa/Payload
+          cp -R "$APP" build/ipa/Payload/
+          (cd build/ipa && zip -qry ../Tesstats.ipa Payload)
+          VERSION=$(/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' "$APP/Info.plist")
+          BUILD=$(/usr/libexec/PlistBuddy -c 'Print :CFBundleVersion' "$APP/Info.plist")
+          echo "VERSION=$VERSION" >> "$GITHUB_ENV"
+          echo "BUILD=$BUILD" >> "$GITHUB_ENV"
+          ls -la build/Tesstats.ipa
+          unzip -l build/Tesstats.ipa | grep -E "Payload/Tesstats.app/(Tesstats|PlugIns/|Watch/)" | head -20
+
+      - name: Publish GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          INPUT_NAME: ${{ github.event.inputs.name }}
+          INPUT_PRERELEASE: ${{ github.event.inputs.prerelease }}
+        run: |
+          case "$TAG" in
+            beta-build-*) DEFAULT_NAME="Beta build ${TAG#beta-build-}"; PRERELEASE=true ;;
+            *)            DEFAULT_NAME="Tesstats ${TAG#v}"; PRERELEASE=false ;;
+          esac
+          NAME="${INPUT_NAME:-$DEFAULT_NAME}"
+          if [ -n "$INPUT_PRERELEASE" ]; then PRERELEASE="$INPUT_PRERELEASE"; fi
+
+          cat > build/notes.md <<EOF
+          Tesstats **${VERSION}** (build **${BUILD}**), built from \`${TAG}\` ($(git rev-parse --short HEAD)).
+
+          \`Tesstats.ipa\` is **unsigned**. Sideload it with AltStore / SideStore or re-sign it with your own certificate before installing.
+          EOF
+
+          FLAGS=()
+          if [ "$PRERELEASE" = "true" ]; then FLAGS+=(--prerelease); fi
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            gh release upload "$TAG" build/Tesstats.ipa --clobber
+          else
+            gh release create "$TAG" build/Tesstats.ipa \
+              --title "$NAME" --notes-file build/notes.md --verify-tag "${FLAGS[@]}"
+          fi
+
+      - name: Upload build log on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: xcodebuild-log
+          path: build/xcodebuild.log
+          if-no-files-found: ignore

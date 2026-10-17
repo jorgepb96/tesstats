@@ -1,0 +1,83 @@
+name: Build and test
+
+on:
+  push:
+    branches-ignore:
+      - main
+    paths-ignore:
+      - "site/**"
+      - "docs/**"
+      - "**.md"
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: macos-26
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Select Xcode 26
+        run: |
+          XCODE=$(ls -d /Applications/Xcode_26*.app | sort -V | tail -1)
+          sudo xcode-select -s "$XCODE"
+          xcodebuild -version
+
+      - name: Install XcodeGen
+        run: brew install xcodegen
+
+      - name: Generate Xcode project
+        run: xcodegen generate
+
+      - name: Unit tests (iOS Simulator)
+        run: |
+          set -o pipefail
+          mkdir -p build
+          DEVICE_ID=$(xcrun simctl list devices available -j | python3 -c '
+          import json, sys
+          devices = json.load(sys.stdin)["devices"]
+          ios = sorted((k for k in devices if "iOS" in k), key=lambda k: [int(p) for p in k.rsplit("iOS-", 1)[-1].split("-")])
+          for runtime in reversed(ios):
+              for d in devices[runtime]:
+                  if d["name"].startswith("iPhone"):
+                      print(d["udid"]); sys.exit()
+          ')
+          echo "Simulator: $DEVICE_ID"
+          xcodebuild \
+            -project Tesstats.xcodeproj \
+            -scheme Tesstats \
+            -configuration Debug \
+            -destination "id=$DEVICE_ID" \
+            -only-testing:TesstatsTests \
+            test | tee build/xcodebuild-test.log | grep -E "error:|Test Case .* failed|Executed [0-9]+ tests|\*\* TEST" || true
+          grep -q "\*\* TEST SUCCEEDED \*\*" build/xcodebuild-test.log || { tail -n 120 build/xcodebuild-test.log; exit 1; }
+
+      - name: Release build (unsigned, device)
+        run: |
+          set -o pipefail
+          xcodebuild \
+            -project Tesstats.xcodeproj \
+            -scheme Tesstats \
+            -configuration Release \
+            -destination 'generic/platform=iOS' \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGN_IDENTITY="" \
+            build | tee build/xcodebuild-release.log | grep -E "error:|\*\* BUILD" || true
+          grep -q "\*\* BUILD SUCCEEDED \*\*" build/xcodebuild-release.log || { tail -n 80 build/xcodebuild-release.log; exit 1; }
+
+      - name: Upload logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: xcodebuild-logs
+          path: build/*.log
+          if-no-files-found: ignore
