@@ -58,7 +58,13 @@ jobs:
             -destination "id=$DEVICE_ID" \
             -only-testing:TesstatsTests \
             test | tee build/xcodebuild-test.log | grep -E "error:|Test Case .* failed|Executed [0-9]+ tests|\*\* TEST" || true
-          grep -q "\*\* TEST SUCCEEDED \*\*" build/xcodebuild-test.log || { tail -n 120 build/xcodebuild-test.log; exit 1; }
+          grep -q "\*\* TEST SUCCEEDED \*\*" build/xcodebuild-test.log || {
+            echo "::group::Failure summary"
+            grep -E "error:|Testing failed|failed \(|requires a development team|provisioning|\*\* TEST" build/xcodebuild-test.log | cut -c1-400 | head -n 80
+            sed -n '/Testing failed:/,/\*\* TEST/p' build/xcodebuild-test.log | cut -c1-400 | head -n 80
+            echo "::endgroup::"
+            exit 1
+          }
 
       - name: Release build (unsigned, device)
         run: |
@@ -72,7 +78,10 @@ jobs:
             CODE_SIGNING_REQUIRED=NO \
             CODE_SIGN_IDENTITY="" \
             build | tee build/xcodebuild-release.log | grep -E "error:|\*\* BUILD" || true
-          grep -q "\*\* BUILD SUCCEEDED \*\*" build/xcodebuild-release.log || { tail -n 80 build/xcodebuild-release.log; exit 1; }
+          grep -q "\*\* BUILD SUCCEEDED \*\*" build/xcodebuild-release.log || {
+            grep -E "error:|\*\* BUILD" build/xcodebuild-release.log | cut -c1-400 | head -n 80
+            exit 1
+          }
 
       - name: Upload logs
         if: always()
