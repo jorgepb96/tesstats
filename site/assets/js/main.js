@@ -9,19 +9,36 @@ const updateHeader = () => {
 updateHeader()
 window.addEventListener('scroll', updateHeader, { passive: true })
 
-menuButton?.addEventListener('click', () => {
-  const isOpen = header.classList.toggle('menu-open')
-  menuButton.setAttribute('aria-expanded', String(isOpen))
-  menuButton.setAttribute('aria-label', isOpen ? 'Close menu' : 'Open menu')
-})
+const navigation = header?.querySelector('.nav-links')
+const closeMenu = (restoreFocus = false) => {
+  header?.classList.remove('menu-open')
+  menuButton?.setAttribute('aria-expanded', 'false')
+  menuButton?.setAttribute('aria-label', 'Open menu')
+  if (restoreFocus) menuButton?.focus()
+}
 
-document.querySelectorAll('.nav-links a').forEach((link) => {
-  link.addEventListener('click', () => {
-    header?.classList.remove('menu-open')
-    menuButton?.setAttribute('aria-expanded', 'false')
-    menuButton?.setAttribute('aria-label', 'Open menu')
+if (menuButton && navigation) {
+  navigation.id = 'site-navigation'
+  menuButton.setAttribute('aria-controls', navigation.id)
+  menuButton.addEventListener('click', () => {
+    const isOpen = header.classList.toggle('menu-open')
+    menuButton.setAttribute('aria-expanded', String(isOpen))
+    menuButton.setAttribute('aria-label', isOpen ? 'Close menu' : 'Open menu')
   })
-})
+  navigation.querySelectorAll('a').forEach((link) => {
+    link.addEventListener('click', () => closeMenu())
+  })
+  document.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape' && header.classList.contains('menu-open')) closeMenu(true)
+  })
+  document.addEventListener('click', (event) => {
+    if (!header.contains(event.target)) closeMenu()
+  })
+  window.addEventListener('resize', () => {
+    if (window.innerWidth > 900) closeMenu()
+  }, { passive: true })
+  header.classList.add('menu-ready')
+}
 
 // Live GitHub star count, best effort: the badge reads fine without it.
 const starCounts = document.querySelectorAll('[data-star-count]')
@@ -47,7 +64,7 @@ document.querySelectorAll('[data-delay]').forEach((element) => {
 
 const revealElements = document.querySelectorAll('.reveal')
 
-if (reducedMotion || !('IntersectionObserver' in window)) {
+if (reducedMotion || window.matchMedia('(max-width: 900px), (hover: none)').matches || !('IntersectionObserver' in window)) {
   revealElements.forEach((element) => element.classList.add('is-visible'))
 } else {
   const revealObserver = new IntersectionObserver((entries, observer) => {
@@ -130,7 +147,7 @@ if (screenRail) {
   requestAnimationFrame(updateScreenControls)
 }
 
-if (!reducedMotion) {
+if (!reducedMotion && window.matchMedia('(min-width: 901px) and (hover: hover) and (pointer: fine)').matches) {
   const heroVisual = document.querySelector('.hero-visual')
 
   window.addEventListener('pointermove', (event) => {
