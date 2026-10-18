@@ -110,36 +110,51 @@ if (screenRail) {
     moveScreens(event.key === 'ArrowLeft' ? -1 : 1)
   })
 
-  let isDragging = false
-  let dragStartX = 0
-  let dragStartScroll = 0
+  let dragPointerId = null
+  let lastDragX = 0
+
+  const stopDragging = () => {
+    if (dragPointerId === null) return
+    const pointerId = dragPointerId
+    dragPointerId = null
+    screenRail.classList.remove('is-dragging')
+    if (screenRail.hasPointerCapture(pointerId)) {
+      screenRail.releasePointerCapture(pointerId)
+    }
+  }
 
   screenRail.addEventListener('pointerdown', (event) => {
-    if (event.pointerType === 'touch' || event.button !== 0) return
-    isDragging = true
-    dragStartX = event.clientX
-    dragStartScroll = screenRail.scrollLeft
+    if (event.pointerType === 'touch' || event.button !== 0 || !event.isPrimary) return
+    dragPointerId = event.pointerId
+    lastDragX = event.clientX
     screenRail.classList.add('is-dragging')
+    // Stop any arrow-button animation before the pointer takes over.
+    screenRail.scrollTo({ left: screenRail.scrollLeft, behavior: 'instant' })
     screenRail.setPointerCapture(event.pointerId)
   })
 
   screenRail.addEventListener('pointermove', (event) => {
-    if (!isDragging) return
+    if (event.pointerId !== dragPointerId) return
+    if ((event.buttons & 1) === 0) {
+      stopDragging()
+      return
+    }
     event.preventDefault()
-    screenRail.scrollLeft = dragStartScroll - (event.clientX - dragStartX)
+    const delta = lastDragX - event.clientX
+    const maxScroll = Math.max(0, screenRail.scrollWidth - screenRail.clientWidth)
+    // Rebase every movement at the edge so reversing has no dead zone.
+    screenRail.scrollLeft = Math.max(0, Math.min(maxScroll, screenRail.scrollLeft + delta))
+    lastDragX = event.clientX
   })
 
-  const stopDragging = (event) => {
-    if (!isDragging) return
-    isDragging = false
-    screenRail.classList.remove('is-dragging')
-    if (screenRail.hasPointerCapture(event.pointerId)) {
-      screenRail.releasePointerCapture(event.pointerId)
-    }
+  const finishPointerDrag = (event) => {
+    if (event.pointerId === dragPointerId) stopDragging()
   }
 
-  screenRail.addEventListener('pointerup', stopDragging)
-  screenRail.addEventListener('pointercancel', stopDragging)
+  screenRail.addEventListener('pointerup', finishPointerDrag)
+  screenRail.addEventListener('pointercancel', finishPointerDrag)
+  screenRail.addEventListener('lostpointercapture', finishPointerDrag)
+  window.addEventListener('blur', stopDragging)
   screenRail.addEventListener('dragstart', (event) => event.preventDefault())
   screenRail.addEventListener('scroll', updateScreenControls, { passive: true })
   window.addEventListener('resize', updateScreenControls, { passive: true })
