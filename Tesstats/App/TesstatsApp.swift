@@ -66,20 +66,33 @@ final class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCent
         AppDelegate.onRegistrationFailure?(error.localizedDescription)
     }
 
+    // Completion-handler variants on purpose: the `async` forms let Swift call UIKit's completion
+    // handler from whatever executor the task ended on. UIKit asserts that handler runs on the
+    // main thread (it refreshes the app snapshot), so tapping a notification crashed the launch.
     nonisolated func userNotificationCenter(_ center: UNUserNotificationCenter,
-                                            didReceive response: UNNotificationResponse) async {
+                                            didReceive response: UNNotificationResponse,
+                                            withCompletionHandler completionHandler: @escaping () -> Void) {
         let info = response.notification.request.content.userInfo
-        guard let carID = info["carId"] as? Int, carID > 0,
-              let chargeID = info["chargeId"] as? Int, chargeID > 0 else { return }
-        await MainActor.run {
-            NotificationNavigation.shared.charge = ChargeNotificationRoute(carID: carID, chargeID: chargeID)
+        var route: ChargeNotificationRoute?
+        if let carID = info["carId"] as? Int, carID > 0,
+           let chargeID = info["chargeId"] as? Int, chargeID > 0 {
+            route = ChargeNotificationRoute(carID: carID, chargeID: chargeID)
+        }
+        let done = UncheckedSendable(value: completionHandler)
+        Task { @MainActor [route] in
+            if let route { NotificationNavigation.shared.charge = route }
+            done.value()
         }
     }
 
     nonisolated func userNotificationCenter(_ center: UNUserNotificationCenter,
-                                            willPresent notification: UNNotification) async -> UNNotificationPresentationOptions {
-        [.banner, .list, .sound, .badge]
+                                            willPresent notification: UNNotification,
+                                            withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void) {
+        let done = UncheckedSendable(value: completionHandler)
+        Task { @MainActor in done.value([.banner, .list, .sound, .badge]) }
     }
+
+    private struct UncheckedSendable<Value>: @unchecked Sendable { let value: Value }
 }
 #endif
 
