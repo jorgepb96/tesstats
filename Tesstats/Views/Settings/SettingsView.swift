@@ -13,6 +13,7 @@ struct SettingsView: View {
 
     @State private var mqttPassword = ""
     @State private var basicAuthPassword = ""
+    @State private var cloudflareAccessClientSecret = ""
     @State private var pushSecret = ""
     @State private var diagnostics: ConnectionDiagnostics?
     @State private var testing = false
@@ -55,6 +56,7 @@ struct SettingsView: View {
                     }
                     apiSection($settings)
                     basicAuthSection($settings)
+                    cloudflareAccessSection($settings)
                     securitySection($settings)
                     testSection
                 case .preferences:
@@ -105,6 +107,7 @@ struct SettingsView: View {
         .onAppear {
             mqttPassword = env.settings.mqttPassword
             basicAuthPassword = env.settings.basicAuthPassword
+            cloudflareAccessClientSecret = env.settings.cloudflareAccessClientSecret
             pushSecret = env.settings.pushSecret
         }
         .alert(L("Use an unencrypted connection?"), isPresented: $showInsecureConfirm) {
@@ -305,6 +308,22 @@ struct SettingsView: View {
             Text(L("Reverse proxy Basic Auth"))
         } footer: {
             Text(L("Applied to the wss MQTT handshake and the history API. Sent only over TLS."))
+        }
+    }
+
+    private func cloudflareAccessSection(_ settings: Bindable<SettingsStore>) -> some View {
+        Section {
+            Toggle(L("My server is behind Cloudflare Access"), isOn: settings.config.usesCloudflareAccess)
+                .tint(Brand.action)
+            if settings.config.usesCloudflareAccess.wrappedValue {
+                LabeledTextField(title: L("Client ID"), text: settings.config.cloudflareAccessClientID,
+                                 prompt: "xxxxxxxx.access", keyboard: .URL)
+                SecureField(L("Client Secret"), text: $cloudflareAccessClientSecret)
+            }
+        } header: {
+            Text(L("Cloudflare Access"))
+        } footer: {
+            Text(L("A service token from Cloudflare Zero Trust → Access → Service credentials. The Access application needs a Service Auth policy that includes it. Sent to the history API, the wss MQTT handshake and the push service, only over TLS."))
         }
     }
 
@@ -837,6 +856,7 @@ struct SettingsView: View {
     private func reloadSecretFields() {
         mqttPassword = env.settings.mqttPassword
         basicAuthPassword = env.settings.basicAuthPassword
+        cloudflareAccessClientSecret = env.settings.cloudflareAccessClientSecret
         pushSecret = env.settings.pushSecret
     }
 
@@ -1009,6 +1029,7 @@ struct SettingsView: View {
     private func commitSecrets() {
         env.settings.mqttPassword = mqttPassword
         env.settings.basicAuthPassword = basicAuthPassword
+        env.settings.cloudflareAccessClientSecret = cloudflareAccessClientSecret
         env.settings.pushSecret = pushSecret
     }
 

@@ -54,6 +54,11 @@ final class SettingsStore {
         set { keychain.set(newValue, for: .basicAuthPassword) }
     }
 
+    var cloudflareAccessClientSecret: String {
+        get { keychain.get(.cloudflareAccessClientSecret) ?? "" }
+        set { keychain.set(newValue, for: .cloudflareAccessClientSecret) }
+    }
+
     var pushSecret: String {
         get { keychain.get(.pushSecret) ?? "" }
         set { keychain.set(newValue, for: .pushSecret) }
@@ -69,6 +74,15 @@ final class SettingsStore {
     var basicAuth: BasicAuth? {
         guard config.usesBasicAuth, !config.basicAuthUsername.isEmpty else { return nil }
         return BasicAuth(user: config.basicAuthUsername, pass: basicAuthPassword)
+    }
+
+    /// Both halves are trimmed: they are usually pasted from the Cloudflare dashboard, and a
+    /// stray newline would make Access reject an otherwise valid token.
+    var cloudflareAccess: CloudflareAccessToken? {
+        let id = config.cloudflareAccessClientID.trimmingCharacters(in: .whitespacesAndNewlines)
+        let secret = cloudflareAccessClientSecret.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard config.usesCloudflareAccess, !id.isEmpty, !secret.isEmpty else { return nil }
+        return CloudflareAccessToken(clientID: id, clientSecret: secret)
     }
 
     /// Accept a bare hostname even if the user pasted a scheme or path
@@ -97,6 +111,8 @@ final class SettingsStore {
             clientID: (config.mqttClientID.isEmpty ? "tesstats-ios" : config.mqttClientID)
                 + "-" + String(format: "%06x", UInt32.random(in: 0...0xFFFFFF)),
             basicAuth: config.mqttTransport == .websocket ? basicAuth : nil,
+            // Access can only front the WebSocket transport; raw mqtts never reaches it.
+            cloudflareAccess: config.mqttTransport == .websocket ? cloudflareAccess : nil,
             trust: trustConfig,
             keepAlive: 30)
     }
@@ -105,6 +121,7 @@ final class SettingsStore {
         HistoryAPIService.Config(
             baseURL: config.normalizedAPIBaseURL,
             basicAuth: basicAuth,
+            cloudflareAccess: cloudflareAccess,
             trust: trustConfig,
             allowInsecure: config.allowInsecureTransport)
     }

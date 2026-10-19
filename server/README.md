@@ -152,7 +152,9 @@ Activity registration endpoint.
 # Charge-cost reminders (5.6.0)
 
 Set `HISTORY_API_URL` to your TeslaMateAPI base URL (without `/v1`) and, if needed,
-`HISTORY_API_AUTHORIZATION` to its Authorization header. Keep credentials in the
+`HISTORY_API_AUTHORIZATION` to its Authorization header. If the API (or a wss broker)
+is published through Cloudflare Access, set `CF_ACCESS_CLIENT_ID` and
+`CF_ACCESS_CLIENT_SECRET` to a service token. Keep credentials in the
 server environment, never Git. Persist `charge-reminders.json` with the token files.
 The bridge checks the most recent charge page every 30 seconds for each MQTT vehicle.
 Its first successful check establishes a baseline without historical alerts.

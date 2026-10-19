@@ -36,6 +36,11 @@ struct ServerConfig: Codable, Equatable, Sendable {
     var usesBasicAuth: Bool = false
     var basicAuthUsername: String = ""
 
+    // MARK: Cloudflare Access service token (REST API, wss handshake and push service)
+    var usesCloudflareAccess: Bool = false
+    /// Service token Client ID (`<id>.access`). The matching Client Secret lives in the Keychain.
+    var cloudflareAccessClientID: String = ""
+
     // MARK: History API (TeslaMateApi)
     var apiBaseURL: String = ""          // e.g. https://teslamate.example.com/api
 
@@ -261,6 +266,8 @@ extension ServerConfig {
         mqttClientID = c.lenient(.mqttClientID, mqttClientID)
         usesBasicAuth = c.lenient(.usesBasicAuth, usesBasicAuth)
         basicAuthUsername = c.lenient(.basicAuthUsername, basicAuthUsername)
+        usesCloudflareAccess = c.lenient(.usesCloudflareAccess, usesCloudflareAccess)
+        cloudflareAccessClientID = c.lenient(.cloudflareAccessClientID, cloudflareAccessClientID)
         apiBaseURL = c.lenient(.apiBaseURL, apiBaseURL)
         trustCustomCertificate = c.lenient(.trustCustomCertificate, trustCustomCertificate)
         pinnedPublicKeySHA256 = c.lenient(.pinnedPublicKeySHA256, pinnedPublicKeySHA256)

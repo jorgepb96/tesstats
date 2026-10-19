@@ -7,6 +7,7 @@ struct KeychainStore: Sendable {
     enum Account: String {
         case mqttPassword = "mqtt.password"
         case basicAuthPassword = "basicauth.password"
+        case cloudflareAccessClientSecret = "cloudflare.clientsecret"
         case apiToken = "api.token"
         case pushSecret = "push.secret"
     }

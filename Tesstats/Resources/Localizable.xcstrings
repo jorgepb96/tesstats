@@ -1,6 +1,118 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "Cloudflare Access" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cloudflare Access"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cloudflare Access"
+          }
+        }
+      }
+    },
+    "My server is behind Cloudflare Access" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "My server is behind Cloudflare Access"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mi servidor está detrás de Cloudflare Access"
+          }
+        }
+      }
+    },
+    "Client ID" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Client ID"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Client ID"
+          }
+        }
+      }
+    },
+    "Client Secret" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Client Secret"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Client Secret"
+          }
+        }
+      }
+    },
+    "A service token from Cloudflare Zero Trust → Access → Service credentials. The Access application needs a Service Auth policy that includes it. Sent to the history API, the wss MQTT handshake and the push service, only over TLS." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A service token from Cloudflare Zero Trust → Access → Service credentials. The Access application needs a Service Auth policy that includes it. Sent to the history API, the wss MQTT handshake and the push service, only over TLS."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Un token de servicio de Cloudflare Zero Trust → Access → Service credentials. La aplicación de Access necesita una política Service Auth que lo incluya. Se envía a la API de histórico, al handshake wss de MQTT y al servicio push, solo sobre TLS."
+          }
+        }
+      }
+    },
+    "Cloudflare Access service token accepted" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cloudflare Access service token accepted"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Token de servicio de Cloudflare Access aceptado"
+          }
+        }
+      }
+    },
+    "Cloudflare Access blocked the request. Turn on Cloudflare Access in Settings and check the service token's Client ID and Client Secret." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cloudflare Access blocked the request. Turn on Cloudflare Access in Settings and check the service token's Client ID and Client Secret."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cloudflare Access ha bloqueado la petición. Activa Cloudflare Access en Ajustes y comprueba el Client ID y el Client Secret del token de servicio."
+          }
+        }
+      }
+    },
     "Charts use session summaries; intermediate telemetry was not returned." : {
       "localizations" : {
         "en" : {
@@ -1830,18 +1942,18 @@
         }
       }
     },
-    "Authentication failed (check Basic Auth credentials)." : {
+    "Authentication failed (check Basic Auth or Cloudflare Access credentials)." : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Authentication failed (check Basic Auth credentials)."
+            "value" : "Authentication failed (check Basic Auth or Cloudflare Access credentials)."
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "La autenticación ha fallado (comprueba las credenciales de Basic Auth)."
+            "value" : "La autenticación ha fallado (comprueba las credenciales de Basic Auth o Cloudflare Access)."
           }
         }
       }

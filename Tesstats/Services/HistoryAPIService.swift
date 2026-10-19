@@ -4,6 +4,7 @@ enum APIError: Error, LocalizedError {
     case notConfigured
     case badURL
     case unauthorized
+    case cloudflareAccess
     case http(Int)
     case insecure
     case underlying(String)
@@ -12,7 +13,8 @@ enum APIError: Error, LocalizedError {
         switch self {
         case .notConfigured: L("No history API (TeslaMateApi) URL configured.")
         case .badURL: L("The API URL is invalid.")
-        case .unauthorized: L("Authentication failed (check Basic Auth credentials).")
+        case .unauthorized: L("Authentication failed (check Basic Auth or Cloudflare Access credentials).")
+        case .cloudflareAccess: L("Cloudflare Access blocked the request. Turn on Cloudflare Access in Settings and check the service token's Client ID and Client Secret.")
         case .http(let code): String(format: L("Server responded with HTTP %@."), String(code))
         case .insecure: L("Refusing to send credentials over an unencrypted connection.")
         case .underlying(let m): m
@@ -42,12 +44,14 @@ private final class APITrustDelegate: NSObject, URLSessionDelegate, @unchecked S
 }
 
 /// Reads TeslaMate history (drives, charges, cars, live status) from a TeslaMateApi
-/// instance over HTTPS. Basic Auth (reverse proxy) is sent as an explicit header, only
-/// over TLS. Decoding is lenient so version differences degrade gracefully.
+/// instance over HTTPS. Basic Auth (reverse proxy) and a Cloudflare Access service token are
+/// sent as explicit headers, only over TLS. Decoding is lenient so version differences
+/// degrade gracefully.
 final class HistoryAPIService: Sendable {
     struct Config: Sendable {
         var baseURL: String
         var basicAuth: BasicAuth?
+        var cloudflareAccess: CloudflareAccessToken?
         var trust: TrustConfig
         var allowInsecure: Bool
     }
@@ -84,10 +88,13 @@ final class HistoryAPIService: Sendable {
         guard let url = URL(string: base + path) else { throw APIError.badURL }
         var req = URLRequest(url: url)
         req.setValue("application/json", forHTTPHeaderField: "Accept")
-        if let basic = config.basicAuth {
-            // Never attach credentials to a plaintext request.
-            if isTLS || config.allowInsecure {
+        // Never attach credentials to a plaintext request.
+        if isTLS || config.allowInsecure {
+            if let basic = config.basicAuth {
                 req.setValue(basic.headerValue, forHTTPHeaderField: "Authorization")
+            }
+            for (name, value) in config.cloudflareAccess?.headers ?? [] {
+                req.setValue(value, forHTTPHeaderField: name)
             }
         }
         return req
@@ -96,11 +103,32 @@ final class HistoryAPIService: Sendable {
     /// Performs the request and returns the body with its HTTP status (200 if not HTTP).
     private func send(path: String) async throws -> (Data, Int) {
         let req = try request(path: path)
+        let data: Data
+        let response: URLResponse
         do {
-            let (data, response) = try await session.data(for: req)
-            return (data, (response as? HTTPURLResponse)?.statusCode ?? 200)
+            (data, response) = try await session.data(for: req)
         } catch {
             throw APIError.underlying(error.localizedDescription)
+        }
+        let http = response as? HTTPURLResponse
+        if let http, Self.isCloudflareAccessLogin(http) { throw APIError.cloudflareAccess }
+        return (data, http?.statusCode ?? 200)
+    }
+
+    /// Cloudflare Access answers a request without a valid service token by redirecting it to
+    /// its login page. URLSession follows the redirect, so the login HTML arrives as a 200 from
+    /// `<team>.cloudflareaccess.com` and would otherwise surface as a baffling decoding error.
+    static func isCloudflareAccessLogin(_ response: HTTPURLResponse) -> Bool {
+        var urls = [response.url]
+        if (300...399).contains(response.statusCode),
+           let location = response.value(forHTTPHeaderField: "Location") {
+            urls.append(URL(string: location, relativeTo: response.url)?.absoluteURL)
+        }
+        return urls.contains { url in
+            guard let url else { return false }
+            let host = url.host?.lowercased() ?? ""
+            return host == "cloudflareaccess.com" || host.hasSuffix(".cloudflareaccess.com")
+                || url.path.hasPrefix("/cdn-cgi/access/")
         }
     }
 

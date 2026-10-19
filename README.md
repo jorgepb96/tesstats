@@ -199,6 +199,8 @@ Best if you want to use the app **away from home** and/or you already have a dom
    * Let's Encrypt certificates are trusted automatically — no extra security toggles needed.
 
 > Prefer nginx, Traefik or a Cloudflare Tunnel? Any of them works — just expose the same two paths (`/mqtt` → mosquitto websockets, `/api` → teslamateapi) over HTTPS.
+>
+> **Behind Cloudflare Access?** Create a service token (Zero Trust → Access → *Service credentials*), add a policy with the **Service Auth** action that includes it to your Access application, then turn on **"My server is behind Cloudflare Access"** in the app and paste the token's Client ID and Client Secret. Tesstats sends them as `CF-Access-Client-Id` / `CF-Access-Client-Secret` headers on the history API, the wss MQTT handshake and the push service. Plain `mqtts` can't pass through Access — use *WebSocket Secure (wss)*.
 
 ---
 
@@ -237,6 +239,8 @@ Open Tesstats → **Settings** (the gear). Here's what every field means:
 | Topic namespace | leave empty (unless you set a custom prefix in TeslaMate) | same |
 
 **Reverse proxy Basic Auth** — turn on only for Option B if your proxy has a login.
+
+**Cloudflare Access** — turn on only if your hostname is protected by Cloudflare Access; enter a service token's Client ID and Client Secret.
 
 **History API** — TeslaMateApi base URL (see Step 3). Required in API‑only mode.
 
