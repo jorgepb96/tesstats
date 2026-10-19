@@ -48,6 +48,9 @@ struct ConnectionTester: Sendable {
             if config.basicAuth != nil {
                 lines.append(DiagLine(ok: true, message: L("Basic Auth accepted")))
             }
+            if config.cloudflareAccess != nil {
+                lines.append(DiagLine(ok: true, message: L("Cloudflare Access service token accepted")))
+            }
             lines.append(DiagLine(ok: true, message: L("Found \(cars.count) car(s) via TeslaMateApi")))
         } catch {
             lines.append(DiagLine(ok: false, message: (error as? APIError)?.errorDescription ?? error.localizedDescription))

@@ -131,11 +131,55 @@ final class APIContractAuditTests: XCTestCase {
         }
     }
 
-    private func service(handler: @escaping AuditURLProtocol.Handler) -> HistoryAPIService {
+    func testCloudflareAccessServiceTokenIsSentWithBasicAuth() async throws {
+        let token = CloudflareAccessToken(clientID: "abc123.access", clientSecret: "s3cret")
+        let api = service(basicAuth: BasicAuth(user: "u", pass: "p"), cloudflareAccess: token) { request in
+            XCTAssertEqual(request.value(forHTTPHeaderField: "CF-Access-Client-Id"), "abc123.access")
+            XCTAssertEqual(request.value(forHTTPHeaderField: "CF-Access-Client-Secret"), "s3cret")
+            XCTAssertEqual(request.value(forHTTPHeaderField: "Authorization"), BasicAuth(user: "u", pass: "p").headerValue)
+            return (200, Data(#"{"data":{"cars":[{"car_id":1,"name":"Model 3"}]}}"#.utf8))
+        }
+        let cars = try await api.fetchCars()
+        XCTAssertEqual(cars.map(\.id), [1])
+    }
+
+    func testNoCloudflareHeadersWithoutAToken() async throws {
+        let api = service { request in
+            XCTAssertNil(request.value(forHTTPHeaderField: "CF-Access-Client-Id"))
+            XCTAssertNil(request.value(forHTTPHeaderField: "CF-Access-Client-Secret"))
+            return (200, Data(#"{"data":{"cars":[]}}"#.utf8))
+        }
+        _ = try await api.fetchCars()
+    }
+
+    func testCloudflareAccessLoginPageIsReportedInsteadOfADecodingError() throws {
+        func response(_ url: String, _ status: Int, location: String? = nil) -> HTTPURLResponse {
+            HTTPURLResponse(url: URL(string: url)!, statusCode: status, httpVersion: "HTTP/1.1",
+                            headerFields: location.map { ["Location": $0] })!
+        }
+        // Followed redirect: the HTML login page arrives as a 200 from the team domain.
+        XCTAssertTrue(HistoryAPIService.isCloudflareAccessLogin(
+            response("https://myteam.cloudflareaccess.com/cdn-cgi/access/login/tesla.example.com?kid=1", 200)))
+        // Unfollowed redirect, absolute and relative Location.
+        XCTAssertTrue(HistoryAPIService.isCloudflareAccessLogin(
+            response("https://tesla.example.com/api/v1/cars", 302,
+                     location: "https://myteam.cloudflareaccess.com/cdn-cgi/access/login/tesla.example.com")))
+        XCTAssertTrue(HistoryAPIService.isCloudflareAccessLogin(
+            response("https://tesla.example.com/api/v1/cars", 302, location: "/cdn-cgi/access/login/tesla.example.com")))
+        // Ordinary responses and redirects are left alone.
+        XCTAssertFalse(HistoryAPIService.isCloudflareAccessLogin(response("https://tesla.example.com/api/v1/cars", 200)))
+        XCTAssertFalse(HistoryAPIService.isCloudflareAccessLogin(response("https://tesla.example.com/api/v1/cars", 403)))
+        XCTAssertFalse(HistoryAPIService.isCloudflareAccessLogin(
+            response("http://tesla.example.com/api", 301, location: "https://tesla.example.com/api")))
+        XCTAssertFalse(HistoryAPIService.isCloudflareAccessLogin(response("https://notcloudflareaccess.com/x", 200)))
+    }
+
+    private func service(basicAuth: BasicAuth? = nil, cloudflareAccess: CloudflareAccessToken? = nil,
+                         handler: @escaping AuditURLProtocol.Handler) -> HistoryAPIService {
         let host = "audit-\(UUID().uuidString.lowercased()).invalid"
         AuditURLProtocol.register(host: host, handler: handler)
         let config = URLSessionConfiguration.ephemeral
         config.protocolClasses = [AuditURLProtocol.self]
-        return HistoryAPIService(config: .init(baseURL: "https://\(host)", basicAuth: nil, trust: .init(allowSelfSigned: false, pinnedPublicKeySHA256: nil), allowInsecure: false), session: URLSession(configuration: config))
+        return HistoryAPIService(config: .init(baseURL: "https://\(host)", basicAuth: basicAuth, cloudflareAccess: cloudflareAccess, trust: .init(allowSelfSigned: false, pinnedPublicKeySHA256: nil), allowInsecure: false), session: URLSession(configuration: config))
     }
 }

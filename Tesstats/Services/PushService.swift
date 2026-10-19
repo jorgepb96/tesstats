@@ -29,16 +29,28 @@ final class PushService: Sendable {
     private let secret: String
     private let session: URLSession
 
-    init(baseURL: String, secret: String, trust: TrustConfig, basicAuth: BasicAuth?) {
+    init(baseURL: String, secret: String, trust: TrustConfig, basicAuth: BasicAuth?,
+         cloudflareAccess: CloudflareAccessToken? = nil) {
         self.baseURL = baseURL
         self.secret = secret
         let cfg = URLSessionConfiguration.ephemeral
         cfg.timeoutIntervalForRequest = 15
         self.session = URLSession(configuration: cfg, delegate: PushTrustDelegate(trust: trust), delegateQueue: nil)
         self.basicAuth = basicAuth
+        self.cloudflareAccess = cloudflareAccess
     }
 
     private let basicAuth: BasicAuth?
+    private let cloudflareAccess: CloudflareAccessToken?
+
+    /// The push service usually sits behind the same proxy as TeslaMate, so it gets the same
+    /// credentials. Only ever called for https:// URLs.
+    private func authorize(_ request: inout URLRequest) {
+        if let basicAuth { request.setValue(basicAuth.headerValue, forHTTPHeaderField: "Authorization") }
+        for (name, value) in cloudflareAccess?.headers ?? [] {
+            request.setValue(value, forHTTPHeaderField: name)
+        }
+    }
 
     func register(token: String, preferences: NotificationPreferences, locationPrices: [String: Double] = [:]) async throws {
         let data = try JSONEncoder().encode(preferences)
@@ -53,7 +65,7 @@ final class PushService: Sendable {
         let base = baseURL.trimmingCharacters(in: CharacterSet(charactersIn: "/ "))
         guard let url = URL(string: base + "/healthz") else { throw PushServiceError.invalidURL }
         var request = URLRequest(url: url)
-        if let basicAuth { request.setValue(basicAuth.headerValue, forHTTPHeaderField: "Authorization") }
+        authorize(&request)
         let (healthData, response) = try await session.data(for: request)
         guard let http = response as? HTTPURLResponse, http.statusCode == 200,
               let health = try JSONSerialization.jsonObject(with: healthData) as? [String: Any],
@@ -99,7 +111,7 @@ final class PushService: Sendable {
         var req = URLRequest(url: url)
         req.httpMethod = "POST"
         req.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        if let basicAuth { req.setValue(basicAuth.headerValue, forHTTPHeaderField: "Authorization") }
+        authorize(&req)
         req.httpBody = try JSONSerialization.data(withJSONObject: body)
         let (data, response) = try await session.data(for: req)
         guard let http = response as? HTTPURLResponse else { throw PushServiceError.invalidResponse }

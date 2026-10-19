@@ -8,6 +8,17 @@ struct BasicAuth: Sendable, Equatable {
     var headerValue: String { "Basic " + Data("\(user):\(pass)".utf8).base64EncodedString() }
 }
 
+/// Cloudflare Access service token (Zero Trust → Access → Service credentials). With both
+/// headers present Access lets a non-browser client through instead of redirecting it to the
+/// interactive login page.
+struct CloudflareAccessToken: Sendable, Equatable {
+    let clientID: String
+    let clientSecret: String
+    var headers: [(String, String)] {
+        [("CF-Access-Client-Id", clientID), ("CF-Access-Client-Secret", clientSecret)]
+    }
+}
+
 /// One-shot guard so a continuation is only resumed once even though the callback
 /// may fire on a serial queue multiple times.
 private final class ResumeOnce: @unchecked Sendable {
@@ -36,9 +47,10 @@ enum MQTTError: Error, LocalizedError {
 }
 
 /// A read-only MQTT 3.1.1 subscriber built directly on Network.framework.
-/// Supports `mqtts` (TLS) and `wss` (WebSocket Secure, with optional Basic Auth on the
-/// handshake), custom-CA trust and public-key pinning. Emits published messages as an
-/// `AsyncStream`; the stream finishing signals a dropped connection to the caller.
+/// Supports `mqtts` (TLS) and `wss` (WebSocket Secure, with optional Basic Auth and a
+/// Cloudflare Access service token on the handshake), custom-CA trust and public-key pinning.
+/// Emits published messages as an `AsyncStream`; the stream finishing signals a dropped
+/// connection to the caller.
 actor MQTTClient {
     struct Config: Sendable {
         var host: String
@@ -49,6 +61,7 @@ actor MQTTClient {
         var password: String?
         var clientID: String
         var basicAuth: BasicAuth?
+        var cloudflareAccess: CloudflareAccessToken?
         var trust: TrustConfig
         var keepAlive: UInt16 = 30
     }
@@ -136,9 +149,10 @@ actor MQTTClient {
             ws.autoReplyPing = true
             // MQTT-over-WebSocket uses the "mqtt" subprotocol.
             ws.setSubprotocols(["mqtt"])
-            if let basic = config.basicAuth {
-                ws.setAdditionalHeaders([("Authorization", basic.headerValue)])
-            }
+            var headers: [(String, String)] = []
+            if let basic = config.basicAuth { headers.append(("Authorization", basic.headerValue)) }
+            if let access = config.cloudflareAccess { headers += access.headers }
+            if !headers.isEmpty { ws.setAdditionalHeaders(headers) }
             params.defaultProtocolStack.applicationProtocols.insert(ws, at: 0)
             let urlString = "wss://\(config.host):\(config.port)\(config.websocketPath)"
             let endpoint = NWEndpoint.url(URL(string: urlString)!)

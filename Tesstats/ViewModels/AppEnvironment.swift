@@ -120,8 +120,10 @@ final class AppEnvironment {
         let secret = settings.pushSecret
         let trust = settings.trustConfig
         let basic = settings.basicAuth
+        let cloudflare = settings.cloudflareAccess
         AppDelegate.onToken = { [weak self] token in
-            let service = PushService(baseURL: url, secret: secret, trust: trust, basicAuth: basic)
+            let service = PushService(baseURL: url, secret: secret, trust: trust, basicAuth: basic,
+                                      cloudflareAccess: cloudflare)
             self?.pushRegistrationTask?.cancel()
             self?.pushRegistrationTask = Task { @MainActor [weak self] in
                 for attempt in 0..<4 {
@@ -157,7 +159,8 @@ final class AppEnvironment {
             let currentService = PushService(baseURL: currentConfig.pushServiceURL,
                                              secret: self.settings.pushSecret,
                                              trust: self.settings.trustConfig,
-                                             basicAuth: self.settings.basicAuth)
+                                             basicAuth: self.settings.basicAuth,
+                                             cloudflareAccess: self.settings.cloudflareAccess)
             Task { @MainActor in
                 do {
                     try await currentService.registerLiveActivity(token: token, carID: carID, config: currentConfig)
@@ -188,7 +191,8 @@ final class AppEnvironment {
         let service = PushService(baseURL: settings.config.pushServiceURL,
                                   secret: settings.pushSecret,
                                   trust: settings.trustConfig,
-                                  basicAuth: settings.basicAuth)
+                                  basicAuth: settings.basicAuth,
+                                  cloudflareAccess: settings.cloudflareAccess)
         do {
             try await service.sendTest(
                 title: L("Test notification"),
@@ -220,9 +224,14 @@ final class AppEnvironment {
             c.usesBasicAuth = true
             c.basicAuthUsername = basicUser
         }
+        if let accessID = env["TESSTATS_CF_ACCESS_CLIENT_ID"], !accessID.isEmpty {
+            c.usesCloudflareAccess = true
+            c.cloudflareAccessClientID = accessID
+        }
         settings.config = c
         settings.mqttPassword = env["TESSTATS_MQTT_PASS"] ?? ""
         settings.basicAuthPassword = env["TESSTATS_BASIC_PASS"] ?? ""
+        settings.cloudflareAccessClientSecret = env["TESSTATS_CF_ACCESS_CLIENT_SECRET"] ?? ""
         if env["TESSTATS_PERSIST"] == "1" { settings.save() }
         return true
     }

@@ -273,6 +273,7 @@ struct ConfigBackup: Codable, Sendable {
     var config: ServerConfig
     var mqttPassword: String?
     var basicAuthPassword: String?
+    var cloudflareAccessClientSecret: String?
     var pushSecret: String?
 
     func encoded() -> Data {

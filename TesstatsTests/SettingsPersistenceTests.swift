@@ -159,6 +159,72 @@ final class SettingsPersistenceTests: XCTestCase {
         XCTAssertEqual(reloaded.config.layout(for: .trips).hidden, ["totals"])
     }
 
+    func testCloudflareAccessTokenIsBuiltOnlyWhenEnabledAndComplete() {
+        let (store, cleanup) = isolatedStore()
+        defer { cleanup() }
+
+        store.config.cloudflareAccessClientID = " abc123.access\n"
+        store.cloudflareAccessClientSecret = "s3cret\n"
+        XCTAssertNil(store.cloudflareAccess, "Off by default")
+
+        store.config.usesCloudflareAccess = true
+        XCTAssertEqual(store.cloudflareAccess, CloudflareAccessToken(clientID: "abc123.access", clientSecret: "s3cret"))
+        XCTAssertEqual(store.makeAPIConfig().cloudflareAccess, store.cloudflareAccess)
+
+        store.config.mqttTransport = .websocket
+        XCTAssertEqual(store.makeMQTTConfig().cloudflareAccess, store.cloudflareAccess)
+        store.config.mqttTransport = .tls
+        XCTAssertNil(store.makeMQTTConfig().cloudflareAccess, "Raw mqtts never passes through Access")
+
+        store.cloudflareAccessClientSecret = ""
+        XCTAssertNil(store.cloudflareAccess)
+    }
+
+    func testCloudflareAccessSettingsSurviveReloadProfilesAndBackups() throws {
+        let (store, cleanup) = isolatedStore()
+        defer { cleanup() }
+
+        store.config.usesCloudflareAccess = true
+        store.config.cloudflareAccessClientID = "home.access"
+        store.cloudflareAccessClientSecret = "home-secret"
+        store.save()
+        let reloaded = SettingsStore(defaults: store.defaults, keychain: store.keychain)
+        XCTAssertTrue(reloaded.config.usesCloudflareAccess)
+        XCTAssertEqual(reloaded.config.cloudflareAccessClientID, "home.access")
+
+        store.saveCurrentAsProfile(name: "Home")
+        let home = try XCTUnwrap(store.activeProfileID)
+        store.config.cloudflareAccessClientID = "garage.access"
+        store.cloudflareAccessClientSecret = "garage-secret"
+        store.saveCurrentAsProfile(name: "Garage")
+        store.switchToProfile(home)
+        XCTAssertEqual(store.config.cloudflareAccessClientID, "home.access")
+        XCTAssertEqual(store.cloudflareAccessClientSecret, "home-secret")
+
+        let backup = try XCTUnwrap(ConfigBackup.decode(store.makeBackup().encoded()))
+        XCTAssertEqual(backup.cloudflareAccessClientSecret, "home-secret")
+        store.cloudflareAccessClientSecret = ""
+        store.restore(backup)
+        XCTAssertEqual(store.cloudflareAccessClientSecret, "home-secret")
+
+        // Backups written before this field existed still restore.
+        let legacy = try XCTUnwrap(ConfigBackup.decode(Data(#"{"version":1,"config":{}}"#.utf8)))
+        XCTAssertNil(legacy.cloudflareAccessClientSecret)
+        XCTAssertFalse(legacy.config.usesCloudflareAccess)
+    }
+
+    /// A store whose defaults and Keychain service are private to the test, so secrets never
+    /// touch (or get wiped from) the app's real Keychain items.
+    private func isolatedStore() -> (SettingsStore, () -> Void) {
+        let suite = "tesstats.test.\(UUID().uuidString)"
+        let defaults = UserDefaults(suiteName: suite)!
+        let keychain = KeychainStore(service: suite)
+        return (SettingsStore(defaults: defaults, keychain: keychain), {
+            keychain.deleteAll()
+            defaults.removePersistentDomain(forName: suite)
+        })
+    }
+
     func testLegacyDriverDisplayDefaultsToStableAutoTelemetryWithoutLosingLayout() throws {
         let data = Data(#"{"preset":"minimal","appearance":"dark","speedScale":"extraLarge","landscapeMapFraction":0.64,"suggestWhenDriving":false,"keepScreenAwake":true}"#.utf8)
 

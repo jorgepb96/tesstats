@@ -21,8 +21,8 @@ extension SettingsStore {
         defaults.set(activeProfileID, forKey: "tesstats.activeProfile")
     }
 
-    private func secretAccounts(_ id: String) -> (mqtt: String, basic: String, push: String) {
-        ("mqtt.password.\(id)", "basicauth.password.\(id)", "push.secret.\(id)")
+    private func secretAccounts(_ id: String) -> (mqtt: String, basic: String, cloudflare: String, push: String) {
+        ("mqtt.password.\(id)", "basicauth.password.\(id)", "cloudflare.clientsecret.\(id)", "push.secret.\(id)")
     }
 
     /// Copy the live global secrets into a profile's per-profile Keychain slots.
@@ -30,6 +30,7 @@ extension SettingsStore {
         let acc = secretAccounts(id)
         keychain.setRaw(mqttPassword, account: acc.mqtt)
         keychain.setRaw(basicAuthPassword, account: acc.basic)
+        keychain.setRaw(cloudflareAccessClientSecret, account: acc.cloudflare)
         keychain.setRaw(pushSecret, account: acc.push)
     }
 
@@ -38,6 +39,7 @@ extension SettingsStore {
         let acc = secretAccounts(id)
         mqttPassword = keychain.getRaw(account: acc.mqtt) ?? ""
         basicAuthPassword = keychain.getRaw(account: acc.basic) ?? ""
+        cloudflareAccessClientSecret = keychain.getRaw(account: acc.cloudflare) ?? ""
         pushSecret = keychain.getRaw(account: acc.push) ?? ""
     }
 
@@ -77,6 +79,7 @@ extension SettingsStore {
         let acc = secretAccounts(id)
         keychain.setRaw(nil, account: acc.mqtt)
         keychain.setRaw(nil, account: acc.basic)
+        keychain.setRaw(nil, account: acc.cloudflare)
         keychain.setRaw(nil, account: acc.push)
         profiles.removeAll { $0.id == id }
         if activeProfileID == id { activeProfileID = nil }
@@ -95,6 +98,7 @@ extension SettingsStore {
         ConfigBackup(config: config,
                      mqttPassword: mqttPassword.isEmpty ? nil : mqttPassword,
                      basicAuthPassword: basicAuthPassword.isEmpty ? nil : basicAuthPassword,
+                     cloudflareAccessClientSecret: cloudflareAccessClientSecret.isEmpty ? nil : cloudflareAccessClientSecret,
                      pushSecret: pushSecret.isEmpty ? nil : pushSecret)
     }
 
@@ -104,6 +108,7 @@ extension SettingsStore {
         config.demoMode = false
         mqttPassword = backup.mqttPassword ?? ""
         basicAuthPassword = backup.basicAuthPassword ?? ""
+        cloudflareAccessClientSecret = backup.cloudflareAccessClientSecret ?? ""
         pushSecret = backup.pushSecret ?? ""
         save()
     }

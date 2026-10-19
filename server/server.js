@@ -31,6 +31,9 @@ const cfg = {
   mqttUser: process.env.MQTT_USERNAME || '',
   mqttPass: process.env.MQTT_PASSWORD || '',
   basicAuth: process.env.MQTT_BASIC_AUTH || '',               // "user:pass" for wss reverse proxy
+  // Cloudflare Access service token, for a wss broker / history API published through Access
+  cfAccessClientId: process.env.CF_ACCESS_CLIENT_ID || '',
+  cfAccessClientSecret: process.env.CF_ACCESS_CLIENT_SECRET || '',
   topicRoot: process.env.TOPIC_ROOT || 'teslamate/cars',
   httpPort: parseInt(process.env.PORT || '8090', 10),
   registerToken: process.env.REGISTER_TOKEN || '',            // shared secret the app must send
@@ -407,11 +410,14 @@ function handle(carId, metric, value) {
 }
 
 // ---- MQTT ------------------------------------------------------------------
+const cfAccessHeaders = cfg.cfAccessClientId && cfg.cfAccessClientSecret
+  ? { 'CF-Access-Client-Id': cfg.cfAccessClientId, 'CF-Access-Client-Secret': cfg.cfAccessClientSecret }
+  : {}
 const mqttOptions = { reconnectPeriod: 5000 }
 if (cfg.mqttUser) { mqttOptions.username = cfg.mqttUser; mqttOptions.password = cfg.mqttPass }
-if (cfg.basicAuth) {
-  mqttOptions.wsOptions = { headers: { Authorization: 'Basic ' + Buffer.from(cfg.basicAuth).toString('base64') } }
-}
+const wsHeaders = { ...cfAccessHeaders }
+if (cfg.basicAuth) wsHeaders.Authorization = 'Basic ' + Buffer.from(cfg.basicAuth).toString('base64')
+if (Object.keys(wsHeaders).length) mqttOptions.wsOptions = { headers: wsHeaders }
 const client = mqtt.connect(cfg.mqttUrl, mqttOptions)
 client.on('connect', () => {
   console.log('MQTT connected:', cfg.mqttUrl)
@@ -439,7 +445,8 @@ async function pollChargeCosts() {
   try {
     for (const carId of Object.keys(cars)) {
       if (!/^\d+$/.test(carId)) continue
-      const headers = cfg.historyAuthorization ? { Authorization: cfg.historyAuthorization } : {}
+      const headers = { ...cfAccessHeaders }
+      if (cfg.historyAuthorization) headers.Authorization = cfg.historyAuthorization
       const charges = []
       const ids = new Set()
       // Seed known locations from history, not just the latest page, so an old charging
