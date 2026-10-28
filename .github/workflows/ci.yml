@@ -23,6 +23,19 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  server-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Test push bridge
+        working-directory: server
+        run: |
+          npm install --ignore-scripts --no-audit --no-fund
+          npm test
+
   test:
     runs-on: macos-26
     timeout-minutes: 60

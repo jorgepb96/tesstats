@@ -601,7 +601,7 @@ struct SettingsView: View {
                 }
                 Label(
                     env.pushRegistrationState == .registered
-                        ? L("Background alerts are connected through APNs.")
+                        ? L("Background alerts are connected through the push service.")
                         : L("Local monitoring stops when iOS suspends the app. Configure Immediate push below for reliable locked-screen alerts."),
                     systemImage: env.pushRegistrationState == .registered ? "checkmark.shield.fill" : "iphone.slash"
                 )
@@ -918,7 +918,7 @@ struct SettingsView: View {
         } header: {
             Text(L("Immediate push (optional)"))
         } footer: {
-            Text(L("For reliable vehicle alerts with the app closed, run the push microservice on the same always-on host as TeslaMate. A TestFlight install uses production APNs; after saving, this screen must say “Push connected”."))
+            Text(L("Native alerts and background Live Activity updates require APNs. For ntfy or webhook alerts, configure the server and subscribe in the receiving app; enabling Immediate push here is optional."))
         }
     }
 
