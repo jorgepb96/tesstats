@@ -285,7 +285,7 @@ Not set up yet? On the welcome screen tap **"Enable demo mode"** (or Settings �
 
 ## Optional — instant push notifications
 
-iOS can't keep a background connection alive 24/7, so notifications only fire while the app is running. For **guaranteed alerts with the app closed** (e.g. a possible Sentry event), this repo includes a tiny **push microservice** in [`/server`](server) that listens to MQTT and sends Apple Push Notifications. It needs an Apple Push key (`.p8`). See [`server/README.md`](server/README.md). This is entirely optional — most people don't need it.
+iOS can't keep a background connection alive 24/7, so notifications only fire while the app is running. For **guaranteed alerts with the app closed** (e.g. a possible Sentry event), this repo includes a tiny **push microservice** in [`/server`](server) that listens to MQTT and sends alerts through **ntfy**, a **webhook**, and/or native Apple Push Notifications. Only the APNs channel needs an Apple Push key (`.p8`); ntfy and webhooks need no Apple credentials or registration in Tesstats. See [`server/README.md`](server/README.md). This is entirely optional — most people don't need it.
 
 TestFlight and App Store installs use the **production** APNs environment. Configure the
 microservice with `APNS_PRODUCTION=true`; sandbox tokens only work for development builds

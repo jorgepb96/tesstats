@@ -177,6 +177,7 @@
     "Selected" : {"localizations":{"en":{"stringUnit":{"state":"translated","value":"Selected"}},"es":{"stringUnit":{"state":"translated","value":"Seleccionado"}}}},
     "Not selected" : {"localizations":{"en":{"stringUnit":{"state":"translated","value":"Not selected"}},"es":{"stringUnit":{"state":"translated","value":"No seleccionado"}}}},
     "Year" : {"localizations":{"en":{"stringUnit":{"state":"translated","value":"Year"}},"es":{"stringUnit":{"state":"translated","value":"Año"}}}},
+    "No notification channel is configured on the push server.": {"localizations": {"en": {"stringUnit": {"state": "translated", "value": "No notification channel is configured on the push server."}}, "es": {"stringUnit": {"state": "translated", "value": "No hay ningún canal de notificaciones configurado en el servidor push."}}}},
     "Update the push server to verify background delivery." : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Update the push server to verify background delivery." } }, "es" : { "stringUnit" : { "state" : "translated", "value" : "Actualiza el servidor push para verificar la entrega en segundo plano." } } } },
     "Switch to night mode" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Switch to night mode" } }, "es" : { "stringUnit" : { "state" : "translated", "value" : "Cambiar a modo noche" } } } },
     "Switch to day mode" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Switch to day mode" } }, "es" : { "stringUnit" : { "state" : "translated", "value" : "Cambiar a modo día" } } } },
@@ -1378,34 +1379,34 @@
         }
       }
     },
-    "Background alerts are connected through APNs." : {
+    "Background alerts are connected through the push service." : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Background alerts are connected through APNs."
+            "value" : "Background alerts are connected through the push service."
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Las alertas en segundo plano están conectadas mediante APNs."
+            "value" : "Las alertas en segundo plano están conectadas mediante el servicio push."
           }
         }
       }
     },
-    "For reliable vehicle alerts with the app closed, run the push microservice on the same always-on host as TeslaMate. A TestFlight install uses production APNs; after saving, this screen must say “Push connected”." : {
+    "Native alerts and background Live Activity updates require APNs. For ntfy or webhook alerts, configure the server and subscribe in the receiving app; enabling Immediate push here is optional." : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "For reliable vehicle alerts with the app closed, run the push microservice on the same always-on host as TeslaMate. A TestFlight install uses production APNs; after saving, this screen must say “Push connected”."
+            "value" : "Native alerts and background Live Activity updates require APNs. For ntfy or webhook alerts, configure the server and subscribe in the receiving app; enabling Immediate push here is optional."
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Para recibir alertas fiables del vehículo con la app cerrada, ejecuta el microservicio push en el mismo equipo siempre encendido que TeslaMate. TestFlight usa APNs de producción; después de guardar, esta pantalla debe indicar «Push conectado»."
+            "value" : "Las alertas nativas y las actualizaciones de Live Activity en segundo plano requieren APNs. Para usar ntfy o webhooks, configura el servidor y suscríbete en la app receptora; activar Push inmediato aquí es opcional."
           }
         }
       }

@@ -7,6 +7,31 @@ enum PushRegistrationState: Equatable, Sendable {
     case failed
 }
 
+struct PushServiceHealth: Decodable, Sendable {
+    let ok: Bool
+    let apnsConfigured: Bool
+    let ntfyConfigured: Bool?
+    let webhookConfigured: Bool?
+    let mqttConnected: Bool?
+    let apnsEnvironment: String?
+
+    func validate(requiresProductionAPNs: Bool) throws {
+        guard ok else { throw PushServiceError.invalidResponse }
+        guard apnsConfigured || ntfyConfigured == true || webhookConfigured == true else {
+            throw PushServiceError.rejected(status: 503, message: L("No notification channel is configured on the push server."))
+        }
+        guard let mqttConnected else {
+            throw PushServiceError.rejected(status: 503, message: L("Update the push server to verify background delivery."))
+        }
+        guard mqttConnected else {
+            throw PushServiceError.rejected(status: 503, message: L("The push server is disconnected from TeslaMate MQTT."))
+        }
+        if requiresProductionAPNs && apnsConfigured && apnsEnvironment != "production" {
+            throw PushServiceError.rejected(status: 503, message: L("TestFlight requires production APNs on the push server."))
+        }
+    }
+}
+
 enum PushServiceError: LocalizedError, Sendable {
     case invalidURL
     case invalidResponse
@@ -30,12 +55,12 @@ final class PushService: Sendable {
     private let session: URLSession
 
     init(baseURL: String, secret: String, trust: TrustConfig, basicAuth: BasicAuth?,
-         cloudflareAccess: CloudflareAccessToken? = nil) {
+         cloudflareAccess: CloudflareAccessToken? = nil, session: URLSession? = nil) {
         self.baseURL = baseURL
         self.secret = secret
         let cfg = URLSessionConfiguration.ephemeral
         cfg.timeoutIntervalForRequest = 15
-        self.session = URLSession(configuration: cfg, delegate: PushTrustDelegate(trust: trust), delegateQueue: nil)
+        self.session = session ?? URLSession(configuration: cfg, delegate: PushTrustDelegate(trust: trust), delegateQueue: nil)
         self.basicAuth = basicAuth
         self.cloudflareAccess = cloudflareAccess
     }
@@ -62,24 +87,17 @@ final class PushService: Sendable {
             "preferences": preferencesObject
         ])
         // Token acceptance alone does not mean the bridge is receiving vehicle events.
-        let base = baseURL.trimmingCharacters(in: CharacterSet(charactersIn: "/ "))
-        guard let url = URL(string: base + "/healthz") else { throw PushServiceError.invalidURL }
-        var request = URLRequest(url: url)
+        var request = URLRequest(url: try endpoint("/healthz"))
         authorize(&request)
         let (healthData, response) = try await session.data(for: request)
-        guard let http = response as? HTTPURLResponse, http.statusCode == 200,
-              let health = try JSONSerialization.jsonObject(with: healthData) as? [String: Any],
-              health["apnsConfigured"] as? Bool == true else { throw PushServiceError.invalidResponse }
-        guard let mqttConnected = health["mqttConnected"] as? Bool else {
-            throw PushServiceError.rejected(status: 503, message: L("Update the push server to verify background delivery."))
+        try validateResponse(response, data: healthData)
+        guard let health = try? JSONDecoder().decode(PushServiceHealth.self, from: healthData) else {
+            throw PushServiceError.invalidResponse
         }
-        if !mqttConnected {
-            throw PushServiceError.rejected(status: 503, message: L("The push server is disconnected from TeslaMate MQTT."))
-        }
-        #if !DEBUG
-        if health["apnsEnvironment"] as? String != "production" {
-            throw PushServiceError.rejected(status: 503, message: L("TestFlight requires production APNs on the push server."))
-        }
+        #if DEBUG
+        try health.validate(requiresProductionAPNs: false)
+        #else
+        try health.validate(requiresProductionAPNs: true)
         #endif
     }
 
@@ -103,17 +121,25 @@ final class PushService: Sendable {
         ])
     }
 
-    private func post(path: String, body: [String: Any]) async throws {
+    private func endpoint(_ path: String) throws -> URL {
         var base = baseURL.trimmingCharacters(in: .whitespacesAndNewlines)
         while base.hasSuffix("/") { base.removeLast() }
         guard !base.isEmpty, base.lowercased().hasPrefix("https://"),
               let url = URL(string: base + path) else { throw PushServiceError.invalidURL }
-        var req = URLRequest(url: url)
+        return url
+    }
+
+    private func post(path: String, body: [String: Any]) async throws {
+        var req = URLRequest(url: try endpoint(path))
         req.httpMethod = "POST"
         req.setValue("application/json", forHTTPHeaderField: "Content-Type")
         authorize(&req)
         req.httpBody = try JSONSerialization.data(withJSONObject: body)
         let (data, response) = try await session.data(for: req)
+        try validateResponse(response, data: data)
+    }
+
+    private func validateResponse(_ response: URLResponse, data: Data) throws {
         guard let http = response as? HTTPURLResponse else { throw PushServiceError.invalidResponse }
         guard 200..<300 ~= http.statusCode else {
             let message = String(data: data, encoding: .utf8) ?? "unknown error"

@@ -1,8 +1,9 @@
 # Tesstats Push Microservice (optional)
 
-Bridges TeslaMate **MQTT → APNs** so you get alerts **even when the Tesstats app
-is closed**, and keeps charging Live Activities current while iOS suspends the
-app. It handles charging, security, geofence and software-update transitions.
+Bridges TeslaMate **MQTT → APNs, ntfy and/or webhooks** so you get alerts **even
+when the Tesstats app is closed**. With APNs configured, it also keeps charging
+Live Activities current while iOS suspends the app. It handles charging,
+security, geofence and software-update transitions.
 
 > **This project is an unofficial community tool and is not affiliated with, endorsed by, or supported by the official TeslaMate project.**
 >
@@ -41,6 +42,10 @@ It can deliver through **three channels** (any combination):
    `NTFY_TOPIC=tesstats-a8f3k2j9x` on this service.
 3. Done — Sentry alerts arrive as *urgent-priority* ntfy pushes with the app closed.
 
+No `APNS_*` settings, Apple key, or device-token registration are needed. Leave
+**Immediate push** in Tesstats disabled if you only use ntfy; notifications arrive
+in the **ntfy app**. The bridge starts forwarding MQTT events as soon as it runs.
+
 ## Option B — Webhook → Home Assistant automations
 
 Set `WEBHOOK_URL` (e.g. an HA webhook trigger). Each event POSTs:
@@ -51,6 +56,8 @@ Set `WEBHOOK_URL` (e.g. an HA webhook trigger). Each event POSTs:
 
 From there, automate anything: phone notification via the HA companion app,
 turn on the lights, sound a siren, send a Telegram message…
+
+No `APNS_*` settings or registration in Tesstats are needed for webhook delivery.
 
 ## Option C — APNs (only for Xcode/TestFlight installs)
 
@@ -75,6 +82,21 @@ Add to your existing `docker-compose.yml` (same network as `mosquitto`):
       - TOPIC_ROOT=teslamate/cars
       - PORT=8090
       - REGISTER_TOKEN=<long-random-secret>
+      # Choose one or both alternative channels. APNs is optional.
+      - NTFY_URL=https://ntfy.sh
+      - NTFY_TOPIC=<long-secret-topic>
+      # - NTFY_TOKEN=<optional-bearer-token>
+      # - WEBHOOK_URL=https://ha.example.com/api/webhook/tesstats
+    depends_on:
+      - mosquitto
+```
+
+For **native APNs alerts and background Live Activity updates**, add the following
+to that service (the key file and volume are only needed for APNs):
+
+```yaml
+    environment:
+      # Add these to the environment entries above.
       - APNS_KEY_PATH=/keys/AuthKey_ABCDE12345.p8
       - APNS_KEY_ID=ABCDE12345
       - APNS_TEAM_ID=YOURTEAMID
@@ -86,14 +108,13 @@ Add to your existing `docker-compose.yml` (same network as `mosquitto`):
     volumes:
       - ./tesstats-push/keys:/keys:ro
       - ./tesstats-push/data:/app/data
-    depends_on:
-      - mosquitto
 ```
 
 Expose `tesstats-push:8090` through your reverse proxy (e.g. `push.example.com`)
-**with Basic Auth / TLS** so the app can register its device token.
+**with Basic Auth / TLS** if you want the app to register or send remote tests.
+ntfy/webhook delivery alone does not require exposing this port.
 
-## How the app uses it
+## How the app uses it (native APNs)
 
 1. In **Tesstats → Settings → Alerts**, enable **Immediate push** and set the
    **Push service URL** (e.g. `https://push.example.com`) and the **shared secret**
@@ -117,13 +138,31 @@ for an app launched from Xcode with a development provisioning profile. After
 changing environments, open Tesstats once so the current device token is
 registered again, then use **Send remote test** in Settings → Alerts.
 
+If you also register an APNs-capable Tesstats install against a bridge configured
+only for ntfy/webhooks, registration and the health check accept those channels.
+Remote tests go to every configured channel; alerts still arrive in the receiving
+app or automation. Registering a token does not enable native APNs delivery.
+Background Live Activity updates always require APNs.
+
 ## Endpoints
 
-- `POST /register` — stores the device token and its optional alert preferences.
+- `POST /register` — stores the device token and its optional alert preferences;
+  requires at least one configured channel. Returns HTTP 200 with plain text `ok`.
 - `POST /register-live-activity` — stores one ActivityKit token plus car, language,
-  units, range preference and accent metadata.
-- `POST /test` — `{ secret, title, message }` → sends a diagnostic push to registered devices.
-- `GET  /healthz`  — `{ ok, tokens, apnsConfigured, apnsEnvironment }`.
+  units, range preference and accent metadata; requires APNs.
+- `POST /test` — `{ secret, title, message }` → queues a diagnostic on every
+  configured channel (registered devices for APNs). Requires an MQTT connection;
+  HTTP 202 acknowledges dispatch, not confirmed delivery by the provider.
+- `GET /healthz` — JSON including `ok`, `tokens`, `mqttConnected`,
+  `apnsConfigured`, `ntfyConfigured`, `webhookConfigured` and `apnsEnvironment`.
+  ntfy is configured only when **both** `NTFY_URL` and `NTFY_TOPIC` are set.
+
+All POST endpoints enforce `REGISTER_TOKEN` when set. A successful registration
+is followed by an app health check: MQTT must be connected and at least one
+notification channel configured. An older bridge without `mqttConnected` must be
+updated. For release/TestFlight apps, any configured APNs channel must use
+production. Deploy both the updated bridge and app when upgrading from a version
+that incorrectly required APNs for every channel.
 
 ## Events
 
@@ -138,7 +177,9 @@ registered again, then use **Send remote test** in Settings → Alerts.
 | Geofence | geofence changes | app preference |
 
 The app sends its alert preferences with each APNs device-token registration, so
-disabled categories are filtered per iPhone. Deploy the server included with the
+disabled categories are filtered per iPhone for APNs. ntfy/webhooks are shared
+server channels and use the server's event toggles rather than per-device
+preferences. Deploy the server included with the
 same Tesstats release as the app; older server builds do not expose the Live
 Activity registration endpoint.
 

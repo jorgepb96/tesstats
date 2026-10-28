@@ -7,7 +7,7 @@
   "license": "AGPL-3.0-only",
   "scripts": {
     "start": "node server.js",
-    "test": "node --test charge-reminders.test.js"
+    "test": "node --test *.test.js"
   },
   "dependencies": {
     "mqtt": "^5.7.0"

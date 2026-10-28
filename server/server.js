@@ -66,6 +66,9 @@ const cfg = {
 const apnsConfigured = Boolean(
   cfg.apnsKeyPath && cfg.apnsKeyId && cfg.apnsTeamId && fs.existsSync(cfg.apnsKeyPath)
 )
+const ntfyConfigured = Boolean(cfg.ntfyUrl && cfg.ntfyTopic)
+const webhookConfigured = Boolean(cfg.webhookUrl)
+const notificationsConfigured = apnsConfigured || ntfyConfigured || webhookConfigured
 
 // ---- Device token store ----------------------------------------------------
 let tokens = new Set()
@@ -116,7 +119,7 @@ const b64urlBuf = (b) => b.toString('base64url')
 // Fan an event out to every configured channel. `extra.event` tags the kind
 // ('sentry' | 'unlocked' | 'open') so receivers can filter/automate.
 function notify(title, body, extra = {}) {
-  if (!apnsConfigured && !cfg.ntfyUrl && !cfg.webhookUrl) {
+  if (!notificationsConfigured) {
     console.log('[no notification channel configured]', title, body)
     return
   }
@@ -127,7 +130,7 @@ function notify(title, body, extra = {}) {
 
 // ---- ntfy ------------------------------------------------------------------
 async function ntfyPush(title, body, extra = {}) {
-  if (!cfg.ntfyUrl || !cfg.ntfyTopic) return
+  if (!ntfyConfigured) return
   try {
     const sentry = extra.event === 'sentry'
     const headers = {
@@ -487,10 +490,13 @@ const httpServer = http.createServer((req, res) => {
         const parsed = JSON.parse(body || '{}')
         const { token, secret, title, message } = parsed
         if (cfg.registerToken && secret !== cfg.registerToken) { res.writeHead(401).end('unauthorized'); return }
-        if (!apnsConfigured) { res.writeHead(503).end('APNs is not configured'); return }
+        if (req.url === '/register-live-activity' && !apnsConfigured) {
+          res.writeHead(503).end('APNs is required for Live Activity updates'); return
+        }
+        if (!notificationsConfigured) { res.writeHead(503).end('No notification channel is configured'); return }
         if (req.url === '/test') {
           if (!client.connected) { res.writeHead(503).end('MQTT disconnected'); return }
-          pushAll(
+          notify(
             typeof title === 'string' && title ? title.slice(0, 120) : 'Tesstats test',
             typeof message === 'string' && message ? message.slice(0, 500) : 'Remote notifications are working.',
             { event: 'test' }
@@ -512,7 +518,7 @@ const httpServer = http.createServer((req, res) => {
           saveLiveActivityTokens()
           scheduleLiveActivityUpdate(String(parsed.carId))
           res.writeHead(200).end('ok')
-        } else if (typeof token === 'string' && /^(?:[0-9a-fA-F]{2}){8,256}$/.test(token)) {
+        } else if (req.url === '/register' && typeof token === 'string' && /^(?:[0-9a-fA-F]{2}){8,256}$/.test(token)) {
           tokens.add(token); saveTokens()
           if (parsed.preferences && typeof parsed.preferences === 'object') {
             devicePreferences.set(token, parsed.preferences)
@@ -525,12 +531,14 @@ const httpServer = http.createServer((req, res) => {
       } catch { res.writeHead(400).end('bad json') }
     })
   } else if (req.method === 'GET' && req.url === '/healthz') {
-    res.writeHead(200).end(JSON.stringify({
+    res.writeHead(200, { 'Content-Type': 'application/json' }).end(JSON.stringify({
       ok: true,
       tokens: tokens.size,
       liveActivityTokens: liveActivityTokens.size,
       preferenceProfiles: devicePreferences.size,
       apnsConfigured,
+      ntfyConfigured,
+      webhookConfigured,
       mqttConnected: client.connected,
       chargeCostRemindersConfigured: Boolean(cfg.historyURL),
       apnsEnvironment: cfg.production ? 'production' : 'sandbox'
@@ -539,4 +547,4 @@ const httpServer = http.createServer((req, res) => {
     res.writeHead(404).end()
   }
 })
-httpServer.listen(cfg.httpPort, () => console.log('HTTP listening on', cfg.httpPort))
+httpServer.listen(cfg.httpPort, () => console.log('HTTP listening on', httpServer.address().port))
