@@ -39,6 +39,32 @@ final class TesstatsUITests: XCTestCase {
         capture("charging-monthly-cost-filtered", in: app)
     }
 
+    func testDriverMapKeepsVehicleVisibleWithActiveRouteInBothOrientations() {
+        let app = XCUIApplication()
+        app.launchEnvironment["TESSTATS_DEMO"] = "1"
+        app.launchEnvironment["TESSTATS_DEMO_SCENARIO"] = "driving"
+        app.launchEnvironment["TESSTATS_START_SCREEN"] = "driver"
+        app.launchEnvironment["TESSTATS_SKIP_TUTORIAL"] = "1"
+        app.launchEnvironment["TESSTATS_SCREENSHOT_MODE"] = "1"
+        app.launchEnvironment["TESSTATS_DRIVER_APPEARANCE"] = "dark"
+        app.launchEnvironment["TESSTATS_DRIVER_HIDDEN_MODULES"] = ""
+        XCUIDevice.shared.orientation = .portrait
+        app.launch()
+        defer { XCUIDevice.shared.orientation = .portrait }
+
+        for orientation: UIDeviceOrientation in [.portrait, .landscapeLeft] {
+            XCUIDevice.shared.orientation = orientation
+            XCTAssertTrue(app.buttons["driver-close"].waitForExistence(timeout: 8))
+            XCTAssertTrue(app.descendants(matching: .any)["driver-route-summary"].exists)
+            let vehicle = app.descendants(matching: .any)["driver-map-vehicle"]
+            XCTAssertTrue(vehicle.waitForExistence(timeout: 8))
+            XCTAssertTrue(app.windows.firstMatch.frame.contains(vehicle.frame))
+            app.buttons["driver-map-zoom-in"].tap()
+            XCTAssertTrue(app.windows.firstMatch.frame.contains(vehicle.frame),
+                          "Zooming with an active destination must keep the car in view")
+        }
+    }
+
     func testDriverQuickAppearanceAndExpandedZoom() {
         let app = XCUIApplication()
         app.launchEnvironment["TESSTATS_DEMO"] = "1"
