@@ -37,7 +37,7 @@ struct DriverDisplayView: View {
         if config.telemetryMode == .bluetooth { return false }
         if hasFreshBluetoothSnapshot { return false }
         return switch env.live.status {
-        case .connected, .demo: false
+        case .connected, .polling, .demo: false
         default: true
         }
     }
@@ -66,13 +66,15 @@ struct DriverDisplayView: View {
             }
             value.lastUpdated = max(value.lastUpdated, bluetooth.date)
         }
-        // Once Core Location has supplied a valid sample, retain that phone position between
-        // updates. Falling back to TeslaMate after an arbitrary three-second gap made the map
-        // jump hundreds of kilometres when the user was away from the parked vehicle.
+        // Keep the map anchored to the live car, as on the dashboard. Phone GPS supplies a local
+        // fallback when the vehicle position is unavailable or the live connection is lost.
         if allowsPhoneTelemetry,
            let coordinate = DriverMapPositionPolicy.resolve(phone: phoneTelemetry.coordinate,
-                                                             teslaMate: value.coordinate) {
-            value.heading = phoneTelemetry.heading ?? value.heading
+                                                             teslaMate: value.coordinate,
+                                                             status: forcesPhoneFallback ? .disconnected : env.live.status) {
+            if forcesPhoneFallback || !env.live.status.isLive || value.coordinate == nil {
+                value.heading = phoneTelemetry.heading ?? value.heading
+            }
             value.latitude = coordinate.latitude
             value.longitude = coordinate.longitude
         }

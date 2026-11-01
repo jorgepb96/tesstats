@@ -106,10 +106,13 @@ enum DriverSpeedFusion {
 }
 
 enum DriverMapPositionPolicy {
-    /// The mounted phone is the only local position source. Once it has a valid coordinate, a
-    /// momentary gap must not reveal the remote TeslaMate coordinate underneath it.
-    static func resolve(phone: Coordinate?, teslaMate: Coordinate?) -> Coordinate? {
-        phone ?? teslaMate
+    /// Follow the same vehicle position as the dashboard while live data is available. A local
+    /// phone fix (including a retained one) is a fallback, not a replacement for the moving car.
+    /// Offline, prefer the phone so a cached remote vehicle cannot pull the map away from it.
+    static func resolve(phone: Coordinate?, teslaMate: Coordinate?,
+                        status: ConnectionStatus) -> Coordinate? {
+        if status.isLive || status == .demo { return teslaMate ?? phone }
+        return phone ?? teslaMate
     }
 }
 

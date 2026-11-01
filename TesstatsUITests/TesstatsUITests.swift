@@ -150,6 +150,8 @@ final class TesstatsUITests: XCTestCase {
         app.launchEnvironment["TESSTATS_START_SCREEN"] = "driver"
         app.launchEnvironment["TESSTATS_SKIP_TUTORIAL"] = "1"
         app.launchEnvironment["TESSTATS_SCREENSHOT_MODE"] = "1"
+        app.launchEnvironment["TESSTATS_DRIVER_APPEARANCE"] = "dark"
+        app.launchEnvironment["TESSTATS_DRIVER_HIDDEN_MODULES"] = ""
         app.launch()
 
         let close = app.buttons["driver-close"]
@@ -490,6 +492,7 @@ final class TesstatsUITests: XCTestCase {
         app.launchEnvironment["TESSTATS_FORCE_PHONE_FALLBACK"] = "1"
         app.launchEnvironment["TESSTATS_PHONE_TELEMETRY_DEMO"] = "1"
         app.launchEnvironment["TESSTATS_DRIVER_APPEARANCE"] = "light"
+        app.launchEnvironment["TESSTATS_DRIVER_HIDDEN_MODULES"] = ""
         app.launchEnvironment["TESSTATS_LANGUAGE"] = "en"
         app.launchEnvironment["TESSTATS_SKIP_TUTORIAL"] = "1"
         app.launch()

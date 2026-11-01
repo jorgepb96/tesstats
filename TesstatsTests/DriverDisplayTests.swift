@@ -146,8 +146,54 @@ final class DriverDisplayTests: XCTestCase {
         let phone = Coordinate(latitude: 40.4168, longitude: -3.7038)
         let remoteVehicle = Coordinate(latitude: 48.8566, longitude: 2.3522)
 
-        XCTAssertEqual(DriverMapPositionPolicy.resolve(phone: phone, teslaMate: remoteVehicle), phone)
-        XCTAssertEqual(DriverMapPositionPolicy.resolve(phone: nil, teslaMate: remoteVehicle), remoteVehicle)
+        for status: ConnectionStatus in [.notConfigured, .connecting, .disconnected, .failed("offline")] {
+            XCTAssertEqual(DriverMapPositionPolicy.resolve(phone: phone, teslaMate: remoteVehicle,
+                                                           status: status), phone)
+            XCTAssertEqual(DriverMapPositionPolicy.resolve(phone: nil, teslaMate: remoteVehicle,
+                                                           status: status), remoteVehicle)
+        }
+    }
+
+    func testMapPositionFollowsMovingVehicleInsteadOfPhoneAtDestination() {
+        let destination = Coordinate(latitude: 40.4168, longitude: -3.7038)
+        var state = VehicleState(carID: 1)
+        state.latitude = 40.4258
+        state.longitude = -3.6991
+        state.activeRouteLatitude = destination.latitude
+        state.activeRouteLongitude = destination.longitude
+
+        for status: ConnectionStatus in [.connected, .polling, .demo] {
+            for latitude in [40.4268, 40.4278] {
+                state.apply(metric: "latitude", value: String(latitude))
+                let position = DriverMapPositionPolicy.resolve(
+                    phone: destination, teslaMate: state.coordinate, status: status
+                )
+                XCTAssertEqual(position, state.coordinate,
+                               "Phone GPS must not pin the map while the live vehicle moves")
+                XCTAssertNotEqual(position, state.routeCoordinate)
+            }
+        }
+    }
+
+    func testMapPositionFallsBackToPhoneWhenVehiclePositionIsUnavailable() {
+        let phone = Coordinate(latitude: 40.4168, longitude: -3.7038)
+
+        for status: ConnectionStatus in [.connected, .polling, .demo, .disconnected] {
+            XCTAssertEqual(DriverMapPositionPolicy.resolve(phone: phone, teslaMate: nil,
+                                                           status: status), phone)
+            XCTAssertNil(DriverMapPositionPolicy.resolve(phone: nil, teslaMate: nil, status: status))
+        }
+    }
+
+    func testMapPositionSwitchesBackToVehicleAfterReconnection() {
+        let phone = Coordinate(latitude: 40.4168, longitude: -3.7038)
+        let vehicle = Coordinate(latitude: 40.4258, longitude: -3.6991)
+
+        for status: ConnectionStatus in [.connected, .disconnected, .connected] {
+            XCTAssertEqual(DriverMapPositionPolicy.resolve(
+                phone: phone, teslaMate: vehicle, status: status
+            ), status == .connected ? vehicle : phone)
+        }
     }
 
     func testGPSSpeedFilterAdaptsToAccuracyAndRejectsImpossibleJump() {
